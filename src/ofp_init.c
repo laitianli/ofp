@@ -306,7 +306,7 @@ void ofp_init_global_param(ofp_global_param_t *params)
 {
 	ofp_init_global_param_from_file(params, NULL);
 }
-
+/* 计算协议栈各个模块共享内存大小，所有模块共享内存起始地址shm->shared_memory */
 static void ofp_init_prepare(void)
 {
 	/*
@@ -317,21 +317,21 @@ static void ofp_init_prepare(void)
 	 * global_param can be accessed and ofp_shared_memory_prealloc()
 	 * can be called.
 	 */
-        ofp_uma_init_prepare();
-	ofp_avl_init_prepare();
+        ofp_uma_init_prepare(); /* 预分配uma模块共享内存---计算需要共享内存大小 */
+	ofp_avl_init_prepare();/* 预分配avl模块共享内存---计算需要共享内存大小 */
 	ofp_reassembly_init_prepare();
-	ofp_pcap_init_prepare();
-	ofp_stat_init_prepare();
-	ofp_timer_init_prepare();
-	ofp_hook_init_prepare();
-	ofp_arp_init_prepare();
-	ofp_route_init_prepare();
+	ofp_pcap_init_prepare();/* 预分配pcap模块共享内存---计算需要共享内存大小 */
+	ofp_stat_init_prepare();/* 预分配stat模块共享内存---计算需要共享内存大小 */
+	ofp_timer_init_prepare();/* 预分配timer模块共享内存---计算需要共享内存大小 */
+	ofp_hook_init_prepare();/* 预分配hook模块共享内存---计算需要共享内存大小 */
+	ofp_arp_init_prepare();/* 预分配arp模块共享内存---计算需要共享内存大小 */
+	ofp_route_init_prepare();/* 预分配route模块共享内存---计算需要共享内存大小 */
 	ofp_portconf_init_prepare();
-	ofp_vlan_init_prepare();
-	ofp_vxlan_init_prepare();
-	ofp_socket_init_prepare();
-	ofp_tcp_var_init_prepare();
-	ofp_ip_init_prepare();
+	ofp_vlan_init_prepare();/* 预分配vlan模块共享内存---计算需要共享内存大小 */
+	ofp_vxlan_init_prepare();/* 预分配vxlan模块共享内存---计算需要共享内存大小 */
+	ofp_socket_init_prepare();/* 预分配socket模块共享内存---计算需要共享内存大小 */
+	ofp_tcp_var_init_prepare();/* 预分配tcp模块共享内存---计算需要共享内存大小 */
+	ofp_ip_init_prepare();/* 预分配ip模块共享内存---计算需要共享内存大小 */
 	ofp_ipsec_init_prepare(&global_param->ipsec);
 }
 
@@ -341,7 +341,7 @@ static int ofp_init_pre_global(ofp_global_param_t *params)
 	 * Allocate and initialize global config memory first so that it
 	 * is available to later init phases.
 	 */
-	HANDLE_ERROR(ofp_global_config_alloc_shared_memory());
+	HANDLE_ERROR(ofp_global_config_alloc_shared_memory());/* 全局配置共享内存 */
 	memset(shm, 0, sizeof(*shm));
 	shm->is_running = 1;
 #ifdef SP
@@ -352,12 +352,12 @@ static int ofp_init_pre_global(ofp_global_param_t *params)
 	*global_param = *params;
 
 	/* Initialize shared memory infra before preallocations */
-	HANDLE_ERROR(ofp_shared_memory_init_global());
+	HANDLE_ERROR(ofp_shared_memory_init_global()); /* 共享内存 */
 	/* Let different code modules preallocate shared memory */
-	ofp_init_prepare();
+	ofp_init_prepare();/* 计算协议栈各个模块所需要共享内存大小（并没有实际分配内存） */
 	/* Finish preallocation phase before the corresponding allocations */
-	HANDLE_ERROR(ofp_shared_memory_prealloc_finish());
-
+	HANDLE_ERROR(ofp_shared_memory_prealloc_finish());/* 分配协议栈所有模块所需要的共享内存 */
+	/* 将各个模块的共享内存全局变量指向已经分配好的共享内存 */
         /* Initialize the UM allocator before doing other inits */
 	HANDLE_ERROR(ofp_uma_init_global());
 
@@ -397,7 +397,7 @@ static int ofp_init_pre_global(ofp_global_param_t *params)
 	pool_params.pkt.num        = params->pkt_pool.nb_pkts;
 	pool_params.pkt.uarea_size = ofp_packet_min_user_area();
 	pool_params.type           = ODP_POOL_PACKET;
-
+	/* 分配内存池，在创建网卡时传入，用于NIC 数据接收 */
 	ofp_packet_pool = ofp_pool_create(SHM_PKT_POOL_NAME, &pool_params);
 	if (ofp_packet_pool == ODP_POOL_INVALID) {
 		OFP_ERR("odp_pool_create failed");
@@ -406,7 +406,7 @@ static int ofp_init_pre_global(ofp_global_param_t *params)
 
 	HANDLE_ERROR(ofp_socket_init_global(ofp_packet_pool));
 	HANDLE_ERROR(ofp_tcp_var_init_global());
-	HANDLE_ERROR(ofp_inet_init());
+	HANDLE_ERROR(ofp_inet_init());/* 协议簇初始化 */
 	HANDLE_ERROR(ofp_ip_init_global());
 	HANDLE_ERROR(ofp_ipsec_init_global(&params->ipsec));
 
@@ -416,7 +416,7 @@ static int ofp_init_pre_global(ofp_global_param_t *params)
 odp_pool_t ofp_packet_pool;
 odp_cpumask_t cpumask;
 int ofp_init_global_called = 0;
-
+/* ofp全局变量初始化 */
 int ofp_init_global(odp_instance_t instance, ofp_global_param_t *params)
 {
 	int i;
@@ -428,7 +428,9 @@ int ofp_init_global(odp_instance_t instance, ofp_global_param_t *params)
 #if ODP_VERSION_API_GENERATION >= 1 && ODP_VERSION_API_MAJOR >= 21
 	odp_schedule_config(NULL);
 #endif
-
+	/* ofp初始化：协议栈各个模块初始化---共享内存分配
+	 *            内存池分配
+	 */
 	HANDLE_ERROR(ofp_init_pre_global(params));
 
 	/* cpu mask for slow path threads */
@@ -438,7 +440,7 @@ int ofp_init_global(odp_instance_t instance, ofp_global_param_t *params)
 	OFP_INFO("Slow path threads on core %d", odp_cpumask_first(&cpumask));
 
 	HANDLE_ERROR(ofp_set_vxlan_interface_queue());
-
+	/* 创建虚拟网卡 */
 	/* Create interfaces */
 	odp_pktio_param_init(&pktio_param);
 	pktio_param.in_mode = params->pktin_mode;
@@ -447,13 +449,13 @@ int ofp_init_global(odp_instance_t instance, ofp_global_param_t *params)
 	ofp_pktin_queue_param_init(&pktin_param, pktio_param.in_mode,
 				   params->sched_sync,
 				   params->sched_group);
-
-	for (i = 0; i < params->if_count; ++i)
+	/* 只有在ofp.conf配置文件配置了ofp_global_param.if_name字段后，这里才会创建网卡 */
+	for (i = 0; i < params->if_count; ++i) /* if_count==0 */
 		HANDLE_ERROR(ofp_ifnet_create(instance, params->if_names[i],
 			&pktio_param, &pktin_param, NULL));
 
 #ifdef SP
-	if (params->enable_nl_thread) {
+	if (params->enable_nl_thread) {/* 创建netlink线程，此netlink线程作用？ */
 		odph_odpthread_params_t thr_params;
 
 		/* Start Netlink server process */

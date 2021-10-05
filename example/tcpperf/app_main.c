@@ -214,14 +214,14 @@ static inline int wait_for_client(int server_fd)
 
 	return fd;
 }
-
+/* 从NIC接收数据再交给ofp协议栈 */
 static inline int rx_burst(odp_pktin_queue_t pktin)
 {
 	odp_packet_t pkt_tbl[PKT_BURST_SIZE];
 	int pkts, i;
-
+	/* 1.接收NIC数据，并坐在pkt_tbl数组中 */
 	pkts = odp_pktin_recv(pktin, pkt_tbl, PKT_BURST_SIZE);
-
+	/* 2.将数据交给ofp协议栈 */
 	for (i = 0; i < pkts; i++) {
 		update_pkt_stats(pkt_tbl[i], &gbl_args->pkts);
 		ofp_packet_input(pkt_tbl[i], ODP_QUEUE_INVALID,
@@ -230,7 +230,7 @@ static inline int rx_burst(odp_pktin_queue_t pktin)
 
 	return pkts;
 }
-
+/* 从NIC接收数据，再交线ofp协议栈 */
 /**
  * Receive packets directly from the NIC and pass them to OFP stack
  */
@@ -241,7 +241,7 @@ static int pktio_recv(void *arg)
 	int timer_count = 0;
 
 	printf("PKTIO thread starting on CPU: %i\n", odp_cpu_id());
-
+	/* ofp本地初始化 */
 	if (ofp_init_local()) {
 		OFP_ERR("Error: ofp_init_local failed\n");
 		goto exit;
@@ -255,6 +255,7 @@ static int pktio_recv(void *arg)
 			timer_count = 0;
 			handle_timeouts();
 		}
+		/* 从NIC接收数据，并交给ofp协议栈 */
 		pkts = rx_burst(pktin);
 		if (odp_unlikely(pkts < 0)) {
 			OFP_ERR("Error: odp_pktin_recv failed\n");
@@ -273,7 +274,7 @@ exit:
 
 	return 0;
 }
-
+/* tcpperf的服务端处理 */
 /**
  * Setup server
  */
@@ -281,7 +282,7 @@ static int setup_server(char *laddr, uint16_t lport)
 {
 	struct ofp_sockaddr_in own_addr;
 	int fd;
-
+	/* 1.创建socket */
 	fd = ofp_socket(OFP_AF_INET, OFP_SOCK_STREAM, OFP_IPPROTO_TCP);
 	if (fd < 0) {
 		OFP_ERR("Error: ofp_socket failed\n");
@@ -305,7 +306,7 @@ static int setup_server(char *laddr, uint16_t lport)
 		own_addr.sin_addr.s_addr = laddr_lin.s_addr;
 	}
 	own_addr.sin_len = sizeof(own_addr);
-
+	/* 2.绑定端口和ip地址 */
 	if (ofp_bind(fd, (struct ofp_sockaddr *)&own_addr,
 		     sizeof(struct ofp_sockaddr)) < 0) {
 		OFP_ERR("Error: ofp_bind failed, err='%s'",
@@ -313,13 +314,14 @@ static int setup_server(char *laddr, uint16_t lport)
 		ofp_close(fd);
 		return -1;
 	}
-
+	/* 3.监听 */
 	if (ofp_listen(fd, SOCKET_BACKLOG)) {
 		OFP_ERR("Error: ofp_listen failed, err='%s'",
 			ofp_strerror(ofp_errno));
 		ofp_close(fd);
 		return -1;
 	}
+	/* 4.tcpperf server服务端 */
 	gbl_args->server_fd = fd;
 
 	return 0;
@@ -331,7 +333,7 @@ static int setup_server(char *laddr, uint16_t lport)
 static int run_server(void *arg ODP_UNUSED)
 {
 	printf("Server thread starting on CPU: %i\n", odp_cpu_id());
-
+	/* 初始化ofp线程相关初始化 */
 	if (ofp_init_local()) {
 		OFP_ERR("Error: OFP local init failed\n");
 		exit_threads = 1;
@@ -339,7 +341,7 @@ static int run_server(void *arg ODP_UNUSED)
 	}
 
 	printf("\nWaiting for client connection...\n");
-
+	/* 等待客户端连接： sellect/ofp_accept() */	
 	gbl_args->client_fd = wait_for_client(gbl_args->server_fd);
 	if (exit_threads || gbl_args->client_fd < 0) {
 		exit_threads = 1;
@@ -358,7 +360,7 @@ static int run_server(void *arg ODP_UNUSED)
 	while (!exit_threads) {
 		uint8_t pkt_buf[SOCKET_RX_BUF_LEN];
 		int ret;
-
+		/* 循环接收数据 */
 		ret = ofp_recv(gbl_args->client_fd, pkt_buf, SOCKET_RX_BUF_LEN,
 			       OFP_MSG_NBIO);
 		if (ret < 0 && ofp_errno == OFP_EWOULDBLOCK)
@@ -369,6 +371,7 @@ static int run_server(void *arg ODP_UNUSED)
 				ofp_errno, ofp_strerror(ofp_errno));
 			break;
 		}
+		/* 统计接收数据 */
 		if (ret) {
 			gbl_args->recv_bytes += ret;
 			gbl_args->recv_calls++;
@@ -410,7 +413,7 @@ static int run_server_single(void *arg)
 			timer_count = 0;
 			handle_timeouts();
 		}
-
+		/* 从NIC接收数据，再交给ofp协议栈 */
 		pkts = rx_burst(pktin);
 		if (odp_unlikely(pkts < 0)) {
 			OFP_ERR("Error: odp_pktin_recv failed\n");
@@ -422,7 +425,7 @@ static int run_server_single(void *arg)
 		/* Server thread takes care of accepting incoming connections */
 		if (gbl_args->con_status == 0)
 			continue;
-
+		/* 从ofp协议栈接收数据 */
 		bytes = ofp_recv(gbl_args->client_fd, pkt_buf,
 				 SOCKET_RX_BUF_LEN, OFP_MSG_NBIO);
 		if (bytes < 0 && ofp_errno == OFP_EWOULDBLOCK)
@@ -994,16 +997,17 @@ int main(int argc, char *argv[])
 	odp_pktio_capability_t capa;
 	odp_pktin_queue_t pktin;
 	int num_output_q;
-
+	/* 1.odp模块初始化 */
 	if (odp_init_global(&instance, NULL, NULL)) {
 		OFP_ERR("Error: ODP global init failed\n");
 		exit(EXIT_FAILURE);
 	}
+	/* 2.odp模块与线程相关初始化 */
 	if (odp_init_local(instance, ODP_THREAD_CONTROL)) {
 		OFP_ERR("Error: ODP local init failed\n");
 		exit(EXIT_FAILURE);
 	}
-
+	/* 3.共享内存分配，此共享内存用来存放tcpperf的命令行参数，线程共享 */
 	/* Reserve shared memory */
 	shm = odp_shm_reserve("shm", sizeof(args_t), ODP_CACHE_LINE_SIZE, 0);
 	gbl_args = odp_shm_addr(shm);
@@ -1015,7 +1019,7 @@ int main(int argc, char *argv[])
 	memset(gbl_args, 0, sizeof(args_t));
 	gbl_args->client_fd = -1;
 	gbl_args->server_fd = -1;
-
+	/* 4.解析命令行参数 */
 	/* Parse and store the application arguments */
 	parse_args(argc, argv, &gbl_args->appl);
 
@@ -1037,13 +1041,14 @@ int main(int argc, char *argv[])
 
 	printf("Worker threads:  %i\n", num_workers);
 	printf("First worker:    %i\n\n", next_worker);
-
+	/* 5.ofp全局参数初始化 */
 	ofp_init_global_param(&app_init_params);
-
+	/* 6.ofp模块初始化 */
 	if (ofp_init_global(instance, &app_init_params)) {
 		OFP_ERR("Error: OFP global init failed\n");
 		exit(EXIT_FAILURE);
 	}
+	/* 7.ofp模块 本地线程、进程初始化 */
 	if (ofp_init_local()) {
 		OFP_ERR("Error: OFP local init failed\n");
 		exit(EXIT_FAILURE);
@@ -1054,7 +1059,7 @@ int main(int argc, char *argv[])
 		OFP_ERR("Error: failed to fetch pktio capability\n");
 		exit(EXIT_FAILURE);
 	}
-
+	/* 8. */
 	odp_pktio_param_init(&pktio_param);
 	pktio_param.in_mode = ODP_PKTIN_MODE_DIRECT;
 	pktio_param.out_mode = ODP_PKTOUT_MODE_DIRECT;
@@ -1074,27 +1079,27 @@ int main(int argc, char *argv[])
 	pktout_param.num_queues = num_output_q;
 
 	memset(&thr_args, 0, sizeof(thread_args_t));
-
+	/* 9.创建ofp虚拟网卡(与ofp_init_global()中调用的有什么区别？) */
 	if (ofp_ifnet_create(instance, gbl_args->appl.if_name,
 			     &pktio_param, &pktin_param, &pktout_param) < 0) {
 		OFP_ERR("Error: failed to init interface %s",
 			gbl_args->appl.if_name);
 		exit(EXIT_FAILURE);
 	}
-
+	/* 10.根据网卡名获取网卡句柄 */
 	pktio = odp_pktio_lookup(gbl_args->appl.if_name);
 	if (pktio == ODP_PKTIO_INVALID) {
 		OFP_ERR("Error: failed locate pktio %s",
 			gbl_args->appl.if_name);
 		exit(EXIT_FAILURE);
 	}
-
+	/* 11.获取网卡输入队列 */
 	if (odp_pktin_queue(pktio, &pktin, 1) != 1) {
 		OFP_ERR("Error: too few pktin queues for %s",
 			gbl_args->appl.if_name);
 		exit(EXIT_FAILURE);
 	}
-
+	/* 12.网卡输出队列数 */	
 	if (odp_pktout_queue(pktio, NULL, 0) != num_output_q) {
 		OFP_ERR("Error: too few pktout queues for %s",
 			gbl_args->appl.if_name);
@@ -1102,7 +1107,7 @@ int main(int argc, char *argv[])
 	}
 
 	thr_args.pktin = pktin;
-
+	/* 13.创建cli服务，客户端可以通过telnet 0 2345连入 */
 	/* Start CLI */
 	ofp_start_cli_thread(instance, app_init_params.linux_core_id,
 			     gbl_args->appl.cli_file);
@@ -1110,16 +1115,20 @@ int main(int argc, char *argv[])
 	/** Wait for the stack to create the FP interface. Otherwise ofp_bind()
 	 *  call will fail.
 	 */
-	sleep(2);
+	/* 14.等fp创建完成，否则ofp_bind()会失败。
+	 *    在这过程中需要使用ifconfig命令配置ip否则ofp_bind()会失败。
+	 *    为什么使用命令行参数-l <ip>不能生效？
+	 */
+	sleep(10); 
 
 	memset(thread_tbl, 0, sizeof(thread_tbl));
 
-	if (gbl_args->appl.mode == MODE_SERVER) {
+	if (gbl_args->appl.mode == MODE_SERVER) { /* tcpperf的服务模式 */
 		if (setup_server(gbl_args->appl.laddr, gbl_args->appl.lport)) {
 			OFP_ERR("Error: failed to setup server\n");
 			exit(EXIT_FAILURE);
 		}
-	} else {
+	} else { /* tcpperf客户端模式 */
 		if (setup_client(gbl_args->appl.daddr, gbl_args->appl.dport)) {
 			OFP_ERR("Error: failed to setup client\n");
 			exit(EXIT_FAILURE);
@@ -1131,27 +1140,28 @@ int main(int argc, char *argv[])
 	 * client.
 	 */
 	if (!(gbl_args->appl.single_thread == 1 && gbl_args->appl.mode == MODE_CLIENT)) {
-		thr_params.start = pktio_recv;
+		thr_params.start = pktio_recv; /* 多线程的接收函数 */
+		/* 服务端单线程模式，在run_server()里调用ofp_accept()/ofp_recv()从ofp协议栈接收数据 */
 		/*
 		 * If single thread server, then we need a separate
 		 * run_server thread to call blocking ofp_accept().
 		 */
 		if (gbl_args->appl.single_thread == 1 && gbl_args->appl.mode == MODE_SERVER)
-			thr_params.start = run_server;
+			thr_params.start = run_server; 
 		thr_params.arg = &thr_args;
 		thr_params.thr_type = ODP_THREAD_WORKER;
 		thr_params.instance = instance;
 		odp_cpumask_zero(&cpu_mask);
 		odp_cpumask_set(&cpu_mask, next_worker);
-		odph_odpthreads_create(&thread_tbl[0], &cpu_mask, &thr_params);
+		odph_odpthreads_create(&thread_tbl[0], &cpu_mask, &thr_params); /* 创建接收线程 */
 		next_worker++;
 	}
-
+	/* 服务端单线程模式：从NIC接收数据再交给ofp协议栈 */
 	/* Create server/client thread */
-	if (gbl_args->appl.single_thread) {
+	if (gbl_args->appl.single_thread) { 
 		thr_params.start = (gbl_args->appl.mode == MODE_SERVER) ?
 			run_server_single : run_client_single;
-	} else {
+	} else { /* 多线程模式 */
 		thr_params.start = (gbl_args->appl.mode == MODE_SERVER) ?
 			run_server : run_client;
 	}
@@ -1163,7 +1173,7 @@ int main(int argc, char *argv[])
 	odph_odpthreads_create(&thread_tbl[next_worker-1], &cpu_mask, &thr_params);
 
 	print_global_stats();
-
+	/* 等待所有线程退出 */
 	odph_odpthreads_join(thread_tbl);
 
 	if (gbl_args->client_fd >= 0)

@@ -210,7 +210,7 @@ void ofp_shared_memory_prealloc(const char *name, uint64_t size)
 	OFP_DBG_SHM("Shared memory bytes preallocated so far: %" PRIu64,
 		    shm->total_size);
 }
-
+/* 分配协议栈所有模块的共享内存 */
 int ofp_shared_memory_prealloc_finish(void)
 {
 	shm->shared_memory = allocate_shared_memory(SHM_NAME_COMMON,

@@ -292,7 +292,7 @@ int ofp_ifnet_create(odp_instance_t instance,
 	(void)instance;
 
 	port = ofp_free_port_alloc();
-	ifnet = ofp_get_ifnet((uint16_t)port, 0);
+	ifnet = ofp_get_ifnet((uint16_t)port, 0);/* 从共享内存获取对应的ifnet对象 */
 	if (ifnet == NULL) {
 		OFP_ERR("Got ifnet NULL");
 		return -1;
@@ -304,7 +304,7 @@ int ofp_ifnet_create(odp_instance_t instance,
 	ifnet->if_state = OFP_IFT_STATE_USED;
 	strncpy(ifnet->if_name, if_name, OFP_IFNAMSIZ);
 	ifnet->if_name[OFP_IFNAMSIZ-1] = 0;
-	ifnet->pkt_pool = ofp_packet_pool;
+	ifnet->pkt_pool = ofp_packet_pool; /* 虚拟网卡的内存池 */
 
 	if (!pktio_param) {
 		pktio_param = &pktio_param_local;
@@ -319,7 +319,7 @@ int ofp_ifnet_create(odp_instance_t instance,
 			OFP_ERR("Invalid pktio configuration parameters.");
 			return -1;
 	}
-
+	/* 打开虚拟网卡 */
 	HANDLE_ERROR(ofp_pktio_open(ifnet, pktio_param));
 
 	HANDLE_ERROR(ofp_pktio_config(ifnet));
@@ -350,7 +350,7 @@ int ofp_ifnet_create(odp_instance_t instance,
 
 #ifdef SP
 	HANDLE_ERROR(ofp_sp_inq_create(ifnet));
-
+	/* 创建tun/tap设备：tun/fp0 */
 	/* Create the kernel representation of the FP interface. */
 	HANDLE_ERROR(sp_setup_device(ifnet));
 
@@ -363,7 +363,7 @@ int ofp_ifnet_create(odp_instance_t instance,
 
 #endif /* SP */
 	/* Start packet receiver or transmitter */
-	if (odp_pktio_start(ifnet->pktio) != 0) {
+	if (odp_pktio_start(ifnet->pktio) != 0) {/* 使能网卡，可以开始接收发送数据 */
 		OFP_ERR("Failed to start pktio.");
 		return -1;
 	}
