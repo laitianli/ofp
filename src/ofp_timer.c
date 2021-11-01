@@ -43,8 +43,8 @@ struct ofp_timer_long_internal {
 
 struct ofp_timer_mem {
 	char pool_space[TIMER_POOL_SIZE];
-	odp_pool_t pool;
-	odp_pool_t buf_pool;
+	odp_pool_t pool; /* ODP_POOL_TIMEOUT类型的pool, 在ofp_timer_init_global中创建 */
+	odp_pool_t buf_pool; /* ODP_POOL_BUFFER类型的pool */
 	odp_queue_t queue;
 	odp_queue_t queue_per_cpu[OFP_MAX_NUM_CPU];
 	odp_timer_pool_t socket_timer_pool;

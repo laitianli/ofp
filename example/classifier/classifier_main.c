@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
 
 	/* Start CLI */
 	ofp_start_cli_thread(instance, app_init_params.linux_core_id, params.cli_file);
-	sleep(1);
+	sleep(15);
 
 	memset(thread_tbl, 0, sizeof(thread_tbl));
 	/* Start dataplane dispatcher worker threads */
@@ -316,7 +316,7 @@ int build_classifier(int if_count, char **if_names)
 	odp_pmr_t pmr_udp;
 	char name[80];
 	int i;
-
+	/* 创建目的cos */
 	cos_udp = build_cos_w_queue("cos_udp");
 	if (cos_udp == ODP_COS_INVALID) {
 		OFP_ERR("Failed to create UDP COS");
@@ -332,25 +332,26 @@ int build_classifier(int if_count, char **if_names)
 		}
 
 		sprintf(name, "cos_default_%s", if_names[i]);
+		/* 创建默认cos */
 		cos_def = build_cos_set_queue(name, ofp_pktio_spq_get(pktio));
 		if (cos_def == ODP_COS_INVALID) {
 			OFP_ERR("Failed to create default COS "
 				"for interface %s\n", if_names[i]);
 			return -1;
 		}
-
+		/* 设置网卡的默认cos */
 		if (odp_pktio_default_cos_set(pktio, cos_def) < 0) {
 			OFP_ERR("Failed to set default COS on interface %s\n",
 				if_names[i]);
 			return -1;
 		}
-
+		/* 设置网卡的error cos */
 		if (odp_pktio_error_cos_set(pktio, cos_def) < 0) {
 			OFP_ERR("Failed to set error COS on interface %s\n",
 				if_names[i]);
 			return -1;
 		}
-
+		/* 创建packet matching rule */
 		pmr_udp = build_udp_prm(cos_def, cos_udp);
 		if (pmr_udp == ODP_PMR_INVALID) {
 			OFP_ERR("Failed to create UDP PRM");
@@ -383,7 +384,7 @@ static odp_cos_t build_cos_w_queue(const char *name)
 	odp_cls_cos_param_init(&cos_param);
 	cos_param.queue = queue_cos;
 	cos_param.pool = odp_pool_lookup(SHM_PKT_POOL_NAME);
-	cos = odp_cls_cos_create(name, &cos_param);
+	cos = odp_cls_cos_create(name, &cos_param);/* cos: class of server */
 	if (cos == ODP_COS_INVALID) {
 		OFP_ERR("Failed to create COS");
 		odp_cos_destroy(cos);
@@ -410,7 +411,7 @@ static odp_cos_t build_cos_set_queue(const char *name, odp_queue_t queue_cos)
 
 	return cos;
 }
-
+/* 创建packet matching ruler对象 */
 static odp_pmr_t build_udp_prm(odp_cos_t cos_src, odp_cos_t cos_dst)
 {
 	odp_pmr_param_t pmr_param;
@@ -419,11 +420,11 @@ static odp_pmr_t build_udp_prm(odp_cos_t cos_src, odp_cos_t cos_dst)
 
 	odp_cls_pmr_param_init(&pmr_param);
 
-	pmr_param.term = ODP_PMR_UDP_DPORT;
-	pmr_param.match.value = &pmr_udp_val;
-	pmr_param.match.mask = &pmr_udp_mask;
-	pmr_param.val_sz = sizeof (pmr_udp_val);
-
+	pmr_param.term = ODP_PMR_UDP_DPORT; /* 包匹配规则：udp包 */
+	pmr_param.match.value = &pmr_udp_val; /* 匹配值：udp端口 */
+	pmr_param.match.mask = &pmr_udp_mask; /* 匹配掩码： */
+	pmr_param.val_sz = sizeof (pmr_udp_val); /* 匹配值长度 */
+ 	/* pmr参数，源cos，目的cos */	
 	return odp_cls_pmr_create(&pmr_param, 1, cos_src, cos_dst);
 }
 
@@ -445,7 +446,7 @@ static void app_processing(void)
 	addr.sin_len = sizeof(struct ofp_sockaddr_in);
 	addr.sin_family = OFP_AF_INET;
 	addr.sin_port = odp_cpu_to_be_16(TEST_PORT);
-	addr.sin_addr.s_addr = IP4(192, 168, 100, 1);
+	addr.sin_addr.s_addr = IP4(192, 168, 80, 128);
 
 	if (ofp_bind(fd_rcv, (const struct ofp_sockaddr *)&addr,
 		sizeof(struct ofp_sockaddr_in)) == -1) {
@@ -460,7 +461,7 @@ static void app_processing(void)
 				ofp_errno);
 			break;
 		}
-		OFP_INFO("Data received: length = %d.\n", len);
+		OFP_INFO("Data received: length = %d. buf: %s\n", len, buf);
 	} while (1);
 
 	if (fd_rcv != -1) {

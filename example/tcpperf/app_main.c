@@ -253,7 +253,7 @@ static int pktio_recv(void *arg)
 		timer_count++;
 		if (odp_unlikely(timer_count > TIMER_SCHED_INT)) {
 			timer_count = 0;
-			handle_timeouts();
+			handle_timeouts();	/* ofp定时器处理 */
 		}
 		/* 从NIC接收数据，并交给ofp协议栈 */
 		pkts = rx_burst(pktin);
@@ -1119,7 +1119,8 @@ int main(int argc, char *argv[])
 	 *    在这过程中需要使用ifconfig命令配置ip否则ofp_bind()会失败。
 	 *    为什么使用命令行参数-l <ip>不能生效？
 	 */
-	sleep(10); 
+	system("sleep 25");
+	//sleep(15); 
 
 	memset(thread_tbl, 0, sizeof(thread_tbl));
 
