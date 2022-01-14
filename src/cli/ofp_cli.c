@@ -548,6 +548,7 @@ static char IP4NET[] = "<a.b.c.d/n>";
 static char IP6ADDR[] = "<a:b:c:d:e:f:g:h>";
 static char IP6NET[] = "<a:b:c:d:e:f:g:h/n>";
 static char MAC[] = "<a:b:c:d:e:f>";
+static char LOGTYPE[] = "<logtype>";
 
 /** Check if the given word is a built-in "Parameter Keyword",
  *  and if so returns the Parameter string address, used as an identifier in the parser;
@@ -580,7 +581,8 @@ static char *get_param_string(const char *str)
 		return IP6ADDR;
 	if IS_PARAM(str, MAC)
 		return MAC;
-
+    if IS_PARAM(str, LOGTYPE)
+        return LOGTYPE;
 #undef IS_PARAM
 	return NULL;
 }
@@ -1046,6 +1048,26 @@ struct cli_command commands[] = {
 		NULL,
 		f_help_netstat
 	},
+	{
+		"dpdk",
+		"show dpdk log control",
+		f_dpdk_log_dump
+	},
+	{
+		"dpdk help",
+		"show dpdk log control",
+		f_dpdk_log_help
+	},
+	{
+		"dpdk reset",
+		"reset dpdk log",
+		f_dpdk_log_reset
+	},
+	{
+		"dpdk log LOGTYPE NUMBER",
+		"set dpdk log level",
+		f_dpdk_log
+	},
 	{ NULL, NULL, NULL }
 };
 
@@ -1322,7 +1344,8 @@ static struct cli_node *find_next_vertical(struct cli_node *s, char *word)
 			(s->word == STRING) ||
 			(s->word == IP6ADDR && ip6addr_ok(word)) ||
 			(s->word == IP6NET && ip6net_ok(word)) ||
-			(s->word == MAC && mac_ok(word))) {
+			(s->word == MAC && mac_ok(word)) ||
+			(s->word == LOGTYPE)) {
 			foundcnt++;
 			if (foundcnt > 1) return 0;
 			found = s;
@@ -1342,7 +1365,8 @@ static int is_parameter(struct cli_node *s)
 		(s->word == STRING) ||
 		(s->word == IP6ADDR) ||
 		(s->word == IP6NET) ||
-		(s->word == MAC));
+		(s->word == MAC) ||
+		(s->word == LOGTYPE));
 }
 
 /** parse(): parse a Command line
@@ -1410,7 +1434,8 @@ static void parse(struct cli_conn *conn, int extra)
 				(found->word == STRING) ||
 				(found->word == IP6ADDR && ip6addr_ok(*token)) ||
 				(found->word == IP6NET && ip6net_ok(*token)) ||
-				(found->word == MAC && mac_ok(*token))) {
+				(found->word == MAC && mac_ok(*token)) ||
+				(found->word == LOGTYPE)) {
 				paramlen += sprintf(paramlist + paramlen,
 						"%s ", *token);
 			}
