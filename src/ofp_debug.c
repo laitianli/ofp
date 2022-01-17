@@ -15,6 +15,9 @@ struct ofp_flag_descript_s ofp_flag_descript[] = {
 
 int ofp_debug_flags = 0;
 int ofp_debug_capture_ports = 0;
+const char* DEFAULT_BBU_LOG_PATH   = "/opt/bbu/oam/log";
+const char* DEFAULT_DEBUG_TXT_FILE_NAME = "ofp_packets.txt";
+const char* DEFAULT_DEBUG_PCAP_FILE_NAME = "ofp_packets.pcap";
 
 void ofp_set_debug_flags(int flags)
 {

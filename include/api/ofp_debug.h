@@ -17,12 +17,14 @@
 /*
  * Debug configure interface
  */
-#define OFP_DEBUG_PRINT_RECV_NIC 1
-#define OFP_DEBUG_PRINT_SEND_NIC 2
-#define OFP_DEBUG_PRINT_RECV_KNI 4
-#define OFP_DEBUG_PRINT_SEND_KNI 8
-#define OFP_DEBUG_PRINT_CONSOLE 16
-#define OFP_DEBUG_CAPTURE       64
+#define OFP_DEBUG_PRINT_RECV_NIC    (1 << 0)
+#define OFP_DEBUG_PRINT_SEND_NIC    (1 << 1)
+#define OFP_DEBUG_PRINT_RECV_KNI    (1 << 2)
+#define OFP_DEBUG_PRINT_SEND_KNI    (1 << 3)
+#define OFP_DEBUG_PRINT_CONSOLE     (1 << 4)
+#define OFP_DEBUG_PRINT_TXT_FILE    (1 << 5)
+#define OFP_DEBUG_CAPTURE           (1 << 6)
+
 
 void ofp_set_debug_flags(int flags);
 int ofp_get_debug_flags(void);

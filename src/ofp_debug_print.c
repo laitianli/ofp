@@ -4,7 +4,7 @@
  *
  * SPDX-License-Identifier:     BSD-3-Clause
  */
-
+#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,6 +14,8 @@
 #include "ofpi_log.h"
 #include "ofpi_debug.h"
 #include "ofpi_util.h"
+static char file_path[256] = {0};
+static FILE *ofp_pkt_f = NULL;
 
 /**
  * Helper function to print a work packet content.
@@ -21,13 +23,17 @@
  *
  * @param work Work queue entry.
  */
+#if 0
 #define ofp_printf(a, b...) do { \
-		if (ofp_debug_flags & OFP_DEBUG_PRINT_CONSOLE) {\
-			OFP_LOG_NO_CTX_NO_LEVEL(b); \
-		} \
-		fprintf(a, b); } \
-	while (0)
-
+    if (ofp_debug_flags & OFP_DEBUG_PRINT_CONSOLE) {\
+        OFP_LOG_NO_CTX_NO_LEVEL(b); \
+    } \
+    fprintf(a, b); \
+}while (0)
+#else
+#define ofp_printf(a, b...) \
+    fprintf(a, b)
+#endif
 static void print_arp(FILE *f, char *p)
 {
 	ofp_printf(f, "ARP %d  %s -> %s ",
@@ -270,117 +276,125 @@ static void print_pkt_binary(odp_packet_t pkt)
 #endif
 
 /* for local debug */
-void ofp_print_packet_buffer(const char *comment, uint8_t *p)
+void ofp_print_packet_buffer(FILE* f, const char *comment, uint8_t *p)
 {
-	static int first = 1;
-	FILE *f;
-	struct ofp_ip *ip;
-	uint16_t proto;
-	char *g;
-
+    struct ofp_ip *ip;
+    uint16_t proto;
+    char *g;
 /*
  * Filter "noise"
  */
 #if 0
-	if (p[12] == 0x00 && p[13] == 0x27)
-		return;
-	if (p[12] == 0x01 && p[13] == 0x98)
-		return;
+    if (p[12] == 0x00 && p[13] == 0x27)
+        return;
+    if (p[12] == 0x01 && p[13] == 0x98)
+        return;
 #endif
-	if (first) {
-		f = fopen(DEFAULT_DEBUG_TXT_FILE_NAME, "w");
-		fclose(f);
-		first = 0;
-	}
+    if (!f)
+       return;
 
-	f = fopen(DEFAULT_DEBUG_TXT_FILE_NAME, "a");
+    static struct timeval tv0;
+    struct timeval tv;
 
-	if (!f)
-		return;
+    gettimeofday(&tv, NULL);
+    if (tv0.tv_sec == 0)
+        tv0 = tv;
+    int ms = (tv.tv_sec*1000+tv.tv_usec/1000) -
+        (tv0.tv_sec*1000+tv0.tv_usec/1000);
 
-	static struct timeval tv0;
-	struct timeval tv;
+    ofp_printf(f, "\n*************\n");
+    ofp_printf(f, "[%d] %s: %d.%03d\n", odp_cpu_id(), comment,
+               ms/1000, ms%1000);
+    ofp_printf(f, "%s ->%s\n  ", ofp_print_mac(p+6), ofp_print_mac(p));
 
-	gettimeofday(&tv, NULL);
-	if (tv0.tv_sec == 0)
-		tv0 = tv;
-	int ms = (tv.tv_sec*1000+tv.tv_usec/1000) -
-		(tv0.tv_sec*1000+tv0.tv_usec/1000);
+    if (p[12] == 0x81 && p[13] == 0x00) {
+        ofp_printf(f, "VLAN %d ", (p[14]<<8)|p[15]);
+        p += 4;
+    }
 
-	ofp_printf(f, "\n*************\n");
-	ofp_printf(f, "[%d] %s: %d.%03d\n", odp_cpu_id(), comment,
-		       ms/1000, ms%1000);
-	ofp_printf(f, "%s ->%s\n  ", ofp_print_mac(p+6), ofp_print_mac(p));
+    if (p[12] == 0x88 && p[13] == 0x47) {
+        uint8_t *label = p+14;
+        int i;
 
-	if (p[12] == 0x81 && p[13] == 0x00) {
-		ofp_printf(f, "VLAN %d ", (p[14]<<8)|p[15]);
-		p += 4;
-	}
+        ofp_printf(f, "MPLS ");
+        while (1) {
+            ofp_printf(f, "[label=%d ttl=%d] ",
+                label[0]*16*256 + label[1]*16 + label[2]/16,
+                label[3]);
+            if (label[2] & 1)
+                break;
+            label += 4;
+        }
 
-	if (p[12] == 0x88 && p[13] == 0x47) {
-		uint8_t *label = p+14;
-		int i;
+        if ((label[4] & 0xf0) == 0x40) {
+            label[2] = 0x08; /* ipv4 */
+            label[3] = 0x00;
+        } else {
+            label[2] = 0x86; /* ipv6 */
+            label[3] = 0xdd;
+        }
 
-		ofp_printf(f, "MPLS ");
-		while (1) {
-			ofp_printf(f, "[label=%d ttl=%d] ",
-				label[0]*16*256 + label[1]*16 + label[2]/16,
-				label[3]);
-			if (label[2] & 1)
-				break;
-			label += 4;
-		}
+        label++;
+        for (i = 0; i < 12; i++)
+            *label-- = p[11 - i];
+        p = label+1;
+    }
 
-		if ((label[4] & 0xf0) == 0x40) {
-			label[2] = 0x08; /* ipv4 */
-			label[3] = 0x00;
-		} else {
-			label[2] = 0x86; /* ipv6 */
-			label[3] = 0xdd;
-		}
+    if (p[12] == 0x08 && p[13] == 0x06) {
+        print_arp(f, (char *)(p + L2_HEADER_NO_VLAN_SIZE));
+    } else if (p[12] == 0x86 && p[13] == 0xdd) {
+        print_ipv6(f, (char *)(p + L2_HEADER_NO_VLAN_SIZE));
+    } else if (p[12] == 0x08 && p[13] == 0x00) {
+        ip = (struct ofp_ip *)(p + L2_HEADER_NO_VLAN_SIZE);
 
-		label++;
-		for (i = 0; i < 12; i++)
-			*label-- = p[11 - i];
-		p = label+1;
-	}
+        if (ip->ip_p == 47) { /* GRE */
+            g = ((char *)ip) + (ip->ip_hl << 2);
+            g += print_gre(f, g, &proto);
+            if (proto == 0x0800)
+                print_ipv4(f, g);
+            else if (proto == 0x86dd)
+                print_ipv6(f, g);
+        } else
+            print_ipv4(f, (char *)(p + L2_HEADER_NO_VLAN_SIZE));
+    } else {
+        ofp_printf(f, "UNKNOWN ETH PACKET TYPE 0x%02x%02x ",
+            p[12], p[13]);
+    }
 
-	if (p[12] == 0x08 && p[13] == 0x06) {
-		print_arp(f, (char *)(p + L2_HEADER_NO_VLAN_SIZE));
-	} else if (p[12] == 0x86 && p[13] == 0xdd) {
-		print_ipv6(f, (char *)(p + L2_HEADER_NO_VLAN_SIZE));
-	} else if (p[12] == 0x08 && p[13] == 0x00) {
-		ip = (struct ofp_ip *)(p + L2_HEADER_NO_VLAN_SIZE);
-
-		if (ip->ip_p == 47) { /* GRE */
-			g = ((char *)ip) + (ip->ip_hl << 2);
-			g += print_gre(f, g, &proto);
-			if (proto == 0x0800)
-				print_ipv4(f, g);
-			else if (proto == 0x86dd)
-				print_ipv6(f, g);
-		} else
-			print_ipv4(f, (char *)(p + L2_HEADER_NO_VLAN_SIZE));
-	} else {
-		ofp_printf(f, "UNKNOWN ETH PACKET TYPE 0x%02x%02x ",
-			p[12], p[13]);
-	}
-
-	ofp_printf(f, "\n");
-	fclose(f);
-	fflush(stdout);
+    ofp_printf(f, "\n");
+    //fclose(f);
+    fflush(stdout);
 }
 
 void ofp_print_packet(const char *comment, odp_packet_t pkt)
 {
 	uint8_t *p;
 	uint32_t len;
-
+    FILE* f = NULL;
 	p = odp_packet_data(pkt);
 	len = odp_packet_len(pkt);
 	(void)len;
-
-	ofp_print_packet_buffer(comment, p);
+    if (ofp_debug_flags & OFP_DEBUG_PRINT_CONSOLE) {
+        f = stdout;
+    }
+    else {
+        static int first = 1;
+        if (first) {
+            if (!access(DEFAULT_BBU_LOG_PATH, R_OK | W_OK)) {
+                snprintf(file_path, sizeof(file_path), "%s/%s", DEFAULT_BBU_LOG_PATH, DEFAULT_DEBUG_TXT_FILE_NAME);
+                DEFAULT_DEBUG_TXT_FILE_NAME = file_path;
+            }
+            first = 0;
+            ofp_pkt_f = fopen(DEFAULT_DEBUG_TXT_FILE_NAME, "a");
+             if (!ofp_pkt_f) {
+                ofp_pkt_f = stdout;
+             }
+        }
+        if (!ofp_pkt_f)
+           return;
+        f = ofp_pkt_f;
+    }
+    ofp_print_packet_buffer(f, comment, p);
 
 #ifdef PRINT_PACKETS_BINARY
 	print_pkt_binary(pkt);

@@ -16,17 +16,31 @@
 /* debug NUMBER */
 void f_debug(struct cli_conn *conn, const char *s)
 {
+    int len = 0;
+    char tmp_buf[1024] = {0};
 	(void)s;
-	ofp_debug_flags = (ofp_debug_flags &
-		(~OFP_DEBUG_PCAP_PORT_MASK)) |
-		strtol(s, NULL, 0);
-
+    ofp_debug_flags = strtol(s, NULL, 0);
+    ofp_debug_flags |= (ofp_debug_flags & (~OFP_DEBUG_PCAP_PORT_MASK));
+    if (!(ofp_debug_flags &
+        (OFP_DEBUG_PRINT_CONSOLE | OFP_DEBUG_PRINT_TXT_FILE | OFP_DEBUG_CAPTURE)))
+        ofp_debug_flags |= OFP_DEBUG_PRINT_CONSOLE;
 	if ((ofp_debug_flags & OFP_DEBUG_CAPTURE) &&
 		(ofp_debug_capture_ports == 0)) {
 
 		/*enable capture on first port*/
 		ofp_debug_capture_ports = 0x1;
 	}
+    if (ofp_debug_flags & OFP_DEBUG_PRINT_CONSOLE) {
+        len += snprintf(tmp_buf + len, sizeof(tmp_buf) - len, " [ %s ]", "console");
+    }
+    if (ofp_debug_flags & OFP_DEBUG_PRINT_TXT_FILE) {
+        len += snprintf(tmp_buf + len, sizeof(tmp_buf) - len, " [ %s ]", DEFAULT_DEBUG_TXT_FILE_NAME);
+    }
+    if (ofp_debug_flags & OFP_DEBUG_CAPTURE) {
+        len += snprintf(tmp_buf + len, sizeof(tmp_buf) - len, " [ %s ]", DEFAULT_DEBUG_PCAP_FILE_NAME);
+    }
+    ofp_sendf(conn->fd, "set debug (0x%02x) success, print packet to %s. \r\n",
+                            ofp_debug_flags, tmp_buf);
 	sendcrlf(conn);
 }
 
@@ -54,8 +68,7 @@ void f_debug_show(struct cli_conn *conn, const char *s)
 			" FP-to-SP" : "",
 			ofp_debug_flags & OFP_DEBUG_PRINT_SEND_KNI ?
 			" SP-to-ODP" : "");
-		ofp_sendf(conn->fd, "  Printing file: "
-			DEFAULT_DEBUG_TXT_FILE_NAME"\r\n");
+		ofp_sendf(conn->fd, "  Printing file: %s \r\n", DEFAULT_DEBUG_TXT_FILE_NAME);
 	} else {
 		ofp_sendf(conn->fd, "Printing NO traffic.\r\n");
 	}
@@ -135,15 +148,15 @@ void f_help_debug(struct cli_conn *conn, const char *s)
 		"    bit 2: print packets from FP to SP\r\n"
 		"    bit 3: print packets from SP to ODP\r\n"
 		"    bit 4: print packets to console\r\n"
-		"    bit 6: capture packets to pcap file\r\n"
+        "    bit 5: print packets to file: %s\r\n"
+		"    bit 6: capture packets to pcap file: %s\r\n"
 		"           - set/reset automatically by capture function\r\n"
-		"  Default text file name: '"
-		DEFAULT_DEBUG_TXT_FILE_NAME"'\r\n"
-		"  Default capture file name: '"
-		DEFAULT_DEBUG_PCAP_FILE_NAME"'\r\n"
+		"  Default text file name: %s\r\n"
+		"  Default capture file name: %s\r\n"
 		"  Example: Print SP traffic:\r\n"
 		"    debug 0xc\r\n"
-		"    (numbers can be in decimal or hex format)\r\n\r\n");
+		"    (numbers can be in decimal or hex format)\r\n\r\n", 
+            DEFAULT_DEBUG_TXT_FILE_NAME, DEFAULT_DEBUG_PCAP_FILE_NAME, DEFAULT_DEBUG_TXT_FILE_NAME, DEFAULT_DEBUG_PCAP_FILE_NAME);
 
 	ofp_sendf(conn->fd,
 		"Set packet capture port(s).\r\n"
@@ -154,10 +167,10 @@ void f_help_debug(struct cli_conn *conn, const char *s)
 		"  Note: \r\n"
 		"    A zero value will disable packet capture.\r\n"
 		"    A non-zero value will enable packet capture.\r\n"
-		"  Default capture file is '"DEFAULT_DEBUG_PCAP_FILE_NAME"'\r\n"
+		"  Default capture file is %s\r\n"
 		"    Old file is overwritten when the fastpath starts.\r\n"
 		"  Example: Save traffic of ports 0, 2, and 3:\r\n"
-		"    debug capture 0xd\r\n\r\n");
+		"    debug capture 0xd\r\n\r\n", DEFAULT_DEBUG_PCAP_FILE_NAME);
 
 	ofp_sendf(conn->fd,
 	  "Set packet capture file or fifo\r\n"

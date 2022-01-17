@@ -29,6 +29,7 @@ struct ofp_pcap_mem {
 	char  pcap_file_name[PCAP_FILE_NAME_MAX_SIZE];
 };
 static __thread struct ofp_pcap_mem *shm;
+static char file_path[256] = {0};
 
 #define IS_KNI(flag) \
 	(flag == OFP_DEBUG_PRINT_RECV_KNI || \
@@ -208,6 +209,10 @@ int ofp_pcap_init_global(void)
 
 	memset(shm, 0, sizeof(*shm));
 	odp_rwlock_init(&shm->lock_pcap_rw);
+    if (!access(DEFAULT_BBU_LOG_PATH, R_OK | W_OK)) {
+        snprintf(file_path, sizeof(file_path), "%s/%s", DEFAULT_BBU_LOG_PATH, DEFAULT_DEBUG_PCAP_FILE_NAME);
+        DEFAULT_DEBUG_PCAP_FILE_NAME = file_path;
+    }
 	strncpy(shm->pcap_file_name, DEFAULT_DEBUG_PCAP_FILE_NAME,
 		PCAP_FILE_NAME_MAX_SIZE);
 	shm->pcap_file_name[PCAP_FILE_NAME_MAX_SIZE - 1] = 0;
