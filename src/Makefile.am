@@ -126,5 +126,6 @@ cli/ofp_cli_address.c \
 cli/ofp_cli_sysctl.c \
 cli/ofp_cli_ipsec.c \
 cli/ofp_cli_netstat.c \
-cli/ofp_cli_dpdk_log.c
+cli/ofp_cli_dpdk_log.c \
+cli/ofp_cli_odp_log.c
 endif

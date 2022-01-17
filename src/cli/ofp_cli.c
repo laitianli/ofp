@@ -1068,6 +1068,31 @@ struct cli_command commands[] = {
 		"set dpdk log level",
 		f_dpdk_log
 	},
+    {
+        "odplog",
+        "show odp log help",
+        f_odp_log_help
+    },
+    {
+        "odplog-help",
+        "show odp log help",
+        f_odp_log_help
+    },
+    {
+        "odplog-dump",
+        "show odp log control",
+        f_odp_log_dump
+    },
+    {
+        "odplog-reset",
+        "reset odp log",
+        f_odp_log_reset
+    },
+    {
+        "odplog level NUMBER",
+        NULL,
+        f_odp_log
+    },
 	{ NULL, NULL, NULL }
 };
 
