@@ -4,11 +4,10 @@
  *
  * SPDX-License-Identifier:     BSD-3-Clause
  */
-
+#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include "ofpi_debug.h"
 #include "ofpi_cli.h"
 #include "ofpi_util.h"
@@ -20,6 +19,10 @@ void f_debug(struct cli_conn *conn, const char *s)
     char tmp_buf[1024] = {0};
 	(void)s;
     ofp_debug_flags = strtol(s, NULL, 0);
+    if(!ofp_debug_flags) {
+        ofp_sendf(conn->fd, "set debug 0 (disabled) success.\r\n");
+        goto end ;
+    }
     ofp_debug_flags |= (ofp_debug_flags & (~OFP_DEBUG_PCAP_PORT_MASK));
     if (!(ofp_debug_flags &
         (OFP_DEBUG_PRINT_CONSOLE | OFP_DEBUG_PRINT_TXT_FILE | OFP_DEBUG_CAPTURE)))
@@ -41,6 +44,7 @@ void f_debug(struct cli_conn *conn, const char *s)
     }
     ofp_sendf(conn->fd, "set debug (0x%02x) success, print packet to %s. \r\n",
                             ofp_debug_flags, tmp_buf);
+end:
 	sendcrlf(conn);
 }
 
