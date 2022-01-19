@@ -6,7 +6,7 @@
 
 /*-
  * Copyright (c) 1982, 1986, 1993
- *	The Regents of the University of California.
+ *    The Regents of the University of California.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,7 +33,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)udp.h	8.1 (Berkeley) 6/10/93
+ *    @(#)udp.h    8.1 (Berkeley) 6/10/93
  * $FreeBSD: release/9.1.0/sys/netinet/udp.h 217126 2011-01-07 21:40:34Z jhb $
  */
 
@@ -51,30 +51,30 @@
  * Per RFC 768, September, 1981.
  */
 struct ofp_udphdr {
-	uint16_t	uh_sport;		/* source port */
-	uint16_t	uh_dport;		/* destination port */
-	uint16_t	uh_ulen;		/* udp length */
-	uint16_t	uh_sum;			/* udp checksum */
+    uint16_t    uh_sport;        /* source port */
+    uint16_t    uh_dport;        /* destination port */
+    uint16_t    uh_ulen;        /* udp length */
+    uint16_t    uh_sum;            /* udp checksum */
 };
 
 /*
  * User-settable options (used with setsockopt).
  */
-#define OFP_UDP_ENCAP			0x01
+#define OFP_UDP_ENCAP            0x01
 
 
 /*
  * UDP Encapsulation of IPsec Packets options.
  */
 /* Encapsulation types. */
-#define OFP_UDP_ENCAP_ESPINUDP_NON_IKE	1 /* draft-ietf-ipsec-nat-t-ike-00/01 */
-#define OFP_UDP_ENCAP_ESPINUDP		2 /* draft-ietf-ipsec-udp-encaps-02+ */
+#define OFP_UDP_ENCAP_ESPINUDP_NON_IKE    1 /* draft-ietf-ipsec-nat-t-ike-00/01 */
+#define OFP_UDP_ENCAP_ESPINUDP        2 /* draft-ietf-ipsec-udp-encaps-02+ */
 
 /* Default ESP in UDP encapsulation port. */
-#define OFP_UDP_ENCAP_ESPINUDP_PORT		500
+#define OFP_UDP_ENCAP_ESPINUDP_PORT        500
 
 /* Maximum UDP fragment size for ESP over UDP. */
-#define OFP_UDP_ENCAP_ESPINUDP_MAXFRAGLEN	552
+#define OFP_UDP_ENCAP_ESPINUDP_MAXFRAGLEN    552
 
 #if __GNUC__ >= 4
 #pragma GCC visibility pop

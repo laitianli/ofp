@@ -2,7 +2,7 @@
  * Copyright (c) 2014, Nokia
  * All rights reserved.
  *
- * SPDX-License-Identifier:	BSD-3-Clause
+ * SPDX-License-Identifier:    BSD-3-Clause
  */
 
 #ifndef __OFP_APP_H__
@@ -39,7 +39,7 @@ uint32_t ofp_packet_min_user_area(void);
  *                 ofp_*_processing() functions.
  */
 enum ofp_return_code ofp_packet_input(odp_packet_t pkt,
-	odp_queue_t in_queue, ofp_pkt_processing_func pkt_func);
+    odp_queue_t in_queue, ofp_pkt_processing_func pkt_func);
 
 /**
  * Process a packet, starting with L2.
@@ -109,9 +109,9 @@ enum ofp_return_code ofp_send_frame(struct ofp_ifnet *dev, odp_packet_t pkt);
 enum ofp_return_code ofp_send_pending_pkt(void);
 
 enum ofp_return_code ofp_ip_send(odp_packet_t pkt,
-				 struct ofp_nh_entry *nh_param);
+                 struct ofp_nh_entry *nh_param);
 enum ofp_return_code ofp_ip6_send(odp_packet_t pkt,
-				  struct ofp_nh6_entry *nh_param);
+                  struct ofp_nh6_entry *nh_param);
 
 #if __GNUC__ >= 4
 #pragma GCC visibility pop

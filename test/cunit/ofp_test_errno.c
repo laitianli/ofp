@@ -25,18 +25,18 @@ odp_instance_t instance;
 
 static int init_suite(void)
 {
-	/* Must be called to create threads via ODP. */
-	if (odp_init_global(&instance, NULL, NULL) < 0) {
-		CU_FAIL("Error: odp_init_global failed");
-		return -1;
-	}
-	return 0;
+    /* Must be called to create threads via ODP. */
+    if (odp_init_global(&instance, NULL, NULL) < 0) {
+        CU_FAIL("Error: odp_init_global failed");
+        return -1;
+    }
+    return 0;
 }
 
 static void test_strerrno(void)
 {
-	CU_ASSERT_STRING_EQUAL(ofp_strerror(OFP_EALREADY), "Operation already in progress");
-	CU_ASSERT_STRING_EQUAL(ofp_strerror(OFP_ELAST+1), "");
+    CU_ASSERT_STRING_EQUAL(ofp_strerror(OFP_EALREADY), "Operation already in progress");
+    CU_ASSERT_STRING_EQUAL(ofp_strerror(OFP_ELAST+1), "");
 }
 
 /* Test that threads can only read/write their own ofp_errno. ODP threads are
@@ -45,107 +45,107 @@ static void test_strerrno(void)
 int other_thread(void *arg);
 static void test_tls_errno(void)
 {
-	odp_cpumask_t cpumask;
-	odph_odpthread_t threads;
-	odp_barrier_t barrier__;
-	odp_barrier_t *barrier;
-	odph_odpthread_params_t thr_params;
+    odp_cpumask_t cpumask;
+    odph_odpthread_t threads;
+    odp_barrier_t barrier__;
+    odp_barrier_t *barrier;
+    odph_odpthread_params_t thr_params;
 
-	CU_ASSERT(1 == odp_cpumask_default_worker(&cpumask, 1));
+    CU_ASSERT(1 == odp_cpumask_default_worker(&cpumask, 1));
 
-	barrier = &barrier__;
-	odp_barrier_init(barrier, 2);
+    barrier = &barrier__;
+    odp_barrier_init(barrier, 2);
 
 
-	thr_params.start = other_thread;
-	thr_params.arg = (void *)barrier;
-	thr_params.thr_type = ODP_THREAD_CONTROL;
-	thr_params.instance = instance;
-	CU_ASSERT(1 == odph_odpthreads_create(
-			  &threads,
-			  &cpumask,
-			  &thr_params));
+    thr_params.start = other_thread;
+    thr_params.arg = (void *)barrier;
+    thr_params.thr_type = ODP_THREAD_CONTROL;
+    thr_params.instance = instance;
+    CU_ASSERT(1 == odph_odpthreads_create(
+              &threads,
+              &cpumask,
+              &thr_params));
 
-	/* Initialize this thread's ofp_errno. */
-	ofp_errno = 0;
+    /* Initialize this thread's ofp_errno. */
+    ofp_errno = 0;
 
-	/* Test 1 - Test that an assignment to the current thread's ofp_errno
-	*           does not modify the ofp_errno of other_thread.
-	*/
-	odp_barrier_wait(barrier);
-	ofp_errno = OFP_EIO;
-	odp_barrier_wait(barrier);
-	CU_ASSERT_EQUAL(ofp_errno, OFP_EIO);
+    /* Test 1 - Test that an assignment to the current thread's ofp_errno
+    *           does not modify the ofp_errno of other_thread.
+    */
+    odp_barrier_wait(barrier);
+    ofp_errno = OFP_EIO;
+    odp_barrier_wait(barrier);
+    CU_ASSERT_EQUAL(ofp_errno, OFP_EIO);
 
-	/* Test 2 - Test both threads. */
-	odp_barrier_wait(barrier);
-	ofp_errno = OFP_EPERM;
-	odp_barrier_wait(barrier);
-	CU_ASSERT_EQUAL(ofp_errno, OFP_EPERM);
+    /* Test 2 - Test both threads. */
+    odp_barrier_wait(barrier);
+    ofp_errno = OFP_EPERM;
+    odp_barrier_wait(barrier);
+    CU_ASSERT_EQUAL(ofp_errno, OFP_EPERM);
 
-	odph_odpthreads_join(&threads);
+    odph_odpthreads_join(&threads);
 }
 
 int other_thread(void *arg)
 {
-	odp_barrier_t *barrier = (odp_barrier_t *)arg;
+    odp_barrier_t *barrier = (odp_barrier_t *)arg;
 
-	/* Initialize this thread's ofp_errno. */
-	ofp_errno = 0;
+    /* Initialize this thread's ofp_errno. */
+    ofp_errno = 0;
 
-	/* Test 1 */
-	odp_barrier_wait(barrier);
-	/* ... */
-	odp_barrier_wait(barrier);
-	CU_ASSERT_EQUAL(ofp_errno, 0);
+    /* Test 1 */
+    odp_barrier_wait(barrier);
+    /* ... */
+    odp_barrier_wait(barrier);
+    CU_ASSERT_EQUAL(ofp_errno, 0);
 
-	/* Test 2 */
-	odp_barrier_wait(barrier);
-	ofp_errno = OFP_ENOENT;
-	odp_barrier_wait(barrier);
-	CU_ASSERT_EQUAL(ofp_errno, OFP_ENOENT);
+    /* Test 2 */
+    odp_barrier_wait(barrier);
+    ofp_errno = OFP_ENOENT;
+    odp_barrier_wait(barrier);
+    CU_ASSERT_EQUAL(ofp_errno, OFP_ENOENT);
 
-	return 0;
+    return 0;
 }
 
 int main(void)
 {
-	CU_pSuite ptr_suite = NULL;
-	int nr_of_failed_tests = 0;
-	int nr_of_failed_suites = 0;
+    CU_pSuite ptr_suite = NULL;
+    int nr_of_failed_tests = 0;
+    int nr_of_failed_suites = 0;
 
-	/* Initialize the CUnit test registry */
-	if (CUE_SUCCESS != CU_initialize_registry())
-		return CU_get_error();
+    /* Initialize the CUnit test registry */
+    if (CUE_SUCCESS != CU_initialize_registry())
+        return CU_get_error();
 
-	/* add a suite to the registry */
-	ptr_suite = CU_add_suite("ofp errno", init_suite, NULL);
-	if (NULL == ptr_suite) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
-	if (NULL == CU_ADD_TEST(ptr_suite, test_strerrno)) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
-	if (NULL == CU_ADD_TEST(ptr_suite, test_tls_errno)) {
-		CU_cleanup_registry();
-		return CU_get_error();
-	}
+    /* add a suite to the registry */
+    ptr_suite = CU_add_suite("ofp errno", init_suite, NULL);
+    if (NULL == ptr_suite) {
+        CU_cleanup_registry();
+        return CU_get_error();
+    }
+    if (NULL == CU_ADD_TEST(ptr_suite, test_strerrno)) {
+        CU_cleanup_registry();
+        return CU_get_error();
+    }
+    if (NULL == CU_ADD_TEST(ptr_suite, test_tls_errno)) {
+        CU_cleanup_registry();
+        return CU_get_error();
+    }
 
 #if defined(OFP_TESTMODE_AUTO)
-	CU_set_output_filename("CUnit-Util");
-	CU_automated_run_tests();
+    CU_set_output_filename("CUnit-Util");
+    CU_automated_run_tests();
 #else
-	/* Run all tests using the CUnit Basic interface */
-	CU_basic_set_mode(CU_BRM_VERBOSE);
-	CU_basic_run_tests();
+    /* Run all tests using the CUnit Basic interface */
+    CU_basic_set_mode(CU_BRM_VERBOSE);
+    CU_basic_run_tests();
 #endif
 
-	nr_of_failed_tests = CU_get_number_of_tests_failed();
-	nr_of_failed_suites = CU_get_number_of_suites_failed();
-	CU_cleanup_registry();
+    nr_of_failed_tests = CU_get_number_of_tests_failed();
+    nr_of_failed_suites = CU_get_number_of_suites_failed();
+    CU_cleanup_registry();
 
-	return (nr_of_failed_suites > 0 ?
-		nr_of_failed_suites : nr_of_failed_tests);
+    return (nr_of_failed_suites > 0 ?
+        nr_of_failed_suites : nr_of_failed_tests);
 }

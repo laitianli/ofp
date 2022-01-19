@@ -2,7 +2,7 @@
  * Copyright (c) 2015, Nokia
  * All rights reserved.
  *
- * SPDX-License-Identifier:	BSD-3-Clause
+ * SPDX-License-Identifier:    BSD-3-Clause
  */
 
 #ifndef __OFP_CONFIG_H__
@@ -50,10 +50,10 @@
 
 /* Configure values */
 /** Packet pool size. */
-# define SHM_PKT_POOL_NB_PKTS		10240
+# define SHM_PKT_POOL_NB_PKTS        10240
 
 /** Packet pool buffer size. */
-#define SHM_PKT_POOL_BUFFER_SIZE	1856
+#define SHM_PKT_POOL_BUFFER_SIZE    1856
 /** Packet pool name. */
 #define SHM_PKT_POOL_NAME "packet_pool"
 

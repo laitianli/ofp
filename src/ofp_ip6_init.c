@@ -26,12 +26,12 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$KAME: ip6_input.c,v 1.259 2002/01/21 04:58:09 jinmei Exp $
+ *    $KAME: ip6_input.c,v 1.259 2002/01/21 04:58:09 jinmei Exp $
  */
 
 /*-
  * Copyright (c) 1982, 1986, 1988, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *    The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -57,7 +57,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)ip_input.c	8.2 (Berkeley) 1/4/94
+ *    @(#)ip_input.c    8.2 (Berkeley) 1/4/94
  */
 
 #include <odp_api.h>
@@ -76,53 +76,53 @@ uint8_t ofp_ip6_protox[OFP_IPPROTO_MAX];
  * IP6 initialization: fill in IP6 protocol switch table.
  * All protocols not implemented go to slow path.
  */
-void	ofp_ip6_init(void)
+void    ofp_ip6_init(void)
 {
-	struct ip6protosw *pr;
-	int i;
+    struct ip6protosw *pr;
+    int i;
 
-	for (i = 0; i < OFP_IPPROTO_MAX; i++)
-		ofp_ip6_protox[i] = 0;
+    for (i = 0; i < OFP_IPPROTO_MAX; i++)
+        ofp_ip6_protox[i] = 0;
 
-	for (pr = (struct ip6protosw *)ofp_inet6domain.dom_protosw;
-	    pr < (struct ip6protosw *)ofp_inet6domain.dom_protoswNPROTOSW;
-	    pr++) {
-		ofp_ip6_protox[pr->pr_protocol] = pr -
-			(struct ip6protosw *)ofp_inet6domain.dom_protosw;
-	}
+    for (pr = (struct ip6protosw *)ofp_inet6domain.dom_protosw;
+        pr < (struct ip6protosw *)ofp_inet6domain.dom_protoswNPROTOSW;
+        pr++) {
+        ofp_ip6_protox[pr->pr_protocol] = pr -
+            (struct ip6protosw *)ofp_inet6domain.dom_protosw;
+    }
 }
 
 #ifdef VIMAGE
-void	ofp_ip6_destroy(void)
+void    ofp_ip6_destroy(void)
 {
 }
 #endif
 
 enum ofp_return_code ofp_ip6_input(odp_packet_t *pkt, int *offp, int *nxt)
 {
-	(void)pkt;
-	(void)offp;
+    (void)pkt;
+    (void)offp;
 
-	*nxt = OFP_IPPROTO_SP;
-	return OFP_PKT_CONTINUE;
+    *nxt = OFP_IPPROTO_SP;
+    return OFP_PKT_CONTINUE;
 }
 
 enum ofp_return_code ofp_ip6_none_input(odp_packet_t *pkt, int *offp, int *nxt)
 {
-	(void)pkt;
-	(void)offp;
+    (void)pkt;
+    (void)offp;
 
-	*nxt = OFP_IPPROTO_DONE;
-	return OFP_PKT_PROCESSED;
+    *nxt = OFP_IPPROTO_DONE;
+    return OFP_PKT_PROCESSED;
 }
 
 enum ofp_return_code ofp_ip6_unrecognized_hdr_input(odp_packet_t *pkt, int *offp, int *nxt)
 {
-	(void)offp;
+    (void)offp;
 
-	ofp_icmp6_error(*pkt, OFP_ICMP6_PARAM_PROB,
-		OFP_ICMP6_PARAMPROB_NEXTHEADER, 0);
+    ofp_icmp6_error(*pkt, OFP_ICMP6_PARAM_PROB,
+        OFP_ICMP6_PARAMPROB_NEXTHEADER, 0);
 
-	*nxt = OFP_IPPROTO_DONE;
-	return OFP_PKT_DROP;
+    *nxt = OFP_IPPROTO_DONE;
+    return OFP_PKT_DROP;
 }

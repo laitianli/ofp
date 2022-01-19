@@ -2,7 +2,7 @@
  * Copyright (c) 2014, Nokia
  * All rights reserved.
  *
- * SPDX-License-Identifier:	BSD-3-Clause
+ * SPDX-License-Identifier:    BSD-3-Clause
  */
 
 /**
@@ -48,23 +48,23 @@
  * support offloading), if needed.
  */
 typedef struct ofp_chksum_offload_config_t {
-	/** Enable IPv4 header checksum validation offload */
-	uint16_t ipv4_rx_ena : 1;
+    /** Enable IPv4 header checksum validation offload */
+    uint16_t ipv4_rx_ena : 1;
 
-	/** Enable UDP checksum validation offload */
-	uint16_t udp_rx_ena  : 1;
+    /** Enable UDP checksum validation offload */
+    uint16_t udp_rx_ena  : 1;
 
-	/** Enable TCP checksum validation offload */
-	uint16_t tcp_rx_ena  : 1;
+    /** Enable TCP checksum validation offload */
+    uint16_t tcp_rx_ena  : 1;
 
-	/** Enable IPv4 header checksum insertion offload */
-	uint16_t ipv4_tx_ena : 1;
+    /** Enable IPv4 header checksum insertion offload */
+    uint16_t ipv4_tx_ena : 1;
 
-	/** Enable UDP checksum insertion offload */
-	uint16_t udp_tx_ena  : 1;
+    /** Enable UDP checksum insertion offload */
+    uint16_t udp_tx_ena  : 1;
 
-	/** Enable TCP checksum insertion offload */
-	uint16_t tcp_tx_ena  : 1;
+    /** Enable TCP checksum insertion offload */
+    uint16_t tcp_tx_ena  : 1;
 } ofp_chksum_offload_config_t;
 
 /**
@@ -73,168 +73,168 @@ typedef struct ofp_chksum_offload_config_t {
  * @see ofp_init_global_param()
  */
 typedef struct ofp_global_param_t {
-	/**
-	 * Count of interfaces to be initialized. The default value is
-	 * 0.
-	 */
-	uint16_t if_count;
+    /**
+     * Count of interfaces to be initialized. The default value is
+     * 0.
+     */
+    uint16_t if_count;
 
-	/**
-	 * CPU core to which internal OFP control threads are pinned.
-	 * The default value is 0.
-	 */
-	uint16_t linux_core_id;
+    /**
+     * CPU core to which internal OFP control threads are pinned.
+     * The default value is 0.
+     */
+    uint16_t linux_core_id;
 
-	/**
-	 * Names of the interfaces to be initialized. The naming
-	 * convention depends on the operating system and the ODP
-	 * implementation. Must point to an array of at least if_count
-	 * zero terminated strings.
-	 */
-	char **if_names;
+    /**
+     * Names of the interfaces to be initialized. The naming
+     * convention depends on the operating system and the ODP
+     * implementation. Must point to an array of at least if_count
+     * zero terminated strings.
+     */
+    char **if_names;
 
-	/**
-	 * Packet input mode of the interfaces initialized by OFP.
-	 * Must be ODP_PKTIN_MODE_SCHED if default_event_dispatcher()
-	 * is used.
-	 *
-	 * Default value is ODP_PKTIN_MODE_SCHED.
-	 */
-	odp_pktin_mode_t pktin_mode;
+    /**
+     * Packet input mode of the interfaces initialized by OFP.
+     * Must be ODP_PKTIN_MODE_SCHED if default_event_dispatcher()
+     * is used.
+     *
+     * Default value is ODP_PKTIN_MODE_SCHED.
+     */
+    odp_pktin_mode_t pktin_mode;
 
-	/**
-	 * Packet output mode of the interfaces initialized by OFP.
-	 *
-	 * Default value is ODP_PKTOUT_MODE_DIRECT.
-	 */
-	odp_pktout_mode_t pktout_mode;
+    /**
+     * Packet output mode of the interfaces initialized by OFP.
+     *
+     * Default value is ODP_PKTOUT_MODE_DIRECT.
+     */
+    odp_pktout_mode_t pktout_mode;
 
-	/**
-	 * Scheduler synchronization method of the pktin queues of the
-	 * interfaces initialized by OFP in the scheduled mode.
-	 * Ignored when pktin_mode is not ODP_PKTIN_MODE_SCHED.
-	 *
-	 * Default value is ODP_SCHED_SYNC_ATOMIC.
-	 */
-	odp_schedule_sync_t sched_sync;
+    /**
+     * Scheduler synchronization method of the pktin queues of the
+     * interfaces initialized by OFP in the scheduled mode.
+     * Ignored when pktin_mode is not ODP_PKTIN_MODE_SCHED.
+     *
+     * Default value is ODP_SCHED_SYNC_ATOMIC.
+     */
+    odp_schedule_sync_t sched_sync;
 
-	/**
-	 * ODP event scheduling group for all scheduled event queues
-	 * (pktio queues, timer queues and other queues) created in
-	 * OFP initialization. The default value is
-	 * ODP_SCHED_GROUP_ALL.
-	 */
-	odp_schedule_group_t sched_group;
+    /**
+     * ODP event scheduling group for all scheduled event queues
+     * (pktio queues, timer queues and other queues) created in
+     * OFP initialization. The default value is
+     * ODP_SCHED_GROUP_ALL.
+     */
+    odp_schedule_group_t sched_group;
 
-	/**
-	 * Packet processing hooks. The default value is NULL for
-	 * every hook.
-	 *
-	 * @see ofp_hook.h
-	 */
-	ofp_pkt_hook pkt_hook[OFP_HOOK_MAX];
+    /**
+     * Packet processing hooks. The default value is NULL for
+     * every hook.
+     *
+     * @see ofp_hook.h
+     */
+    ofp_pkt_hook pkt_hook[OFP_HOOK_MAX];
 
-	/**
-	 * Create netlink listener thread. If slow path is enabled,
-	 * then default is TRUE, otherwise default is FALSE.
-	 */
-	odp_bool_t enable_nl_thread;
+    /**
+     * Create netlink listener thread. If slow path is enabled,
+     * then default is TRUE, otherwise default is FALSE.
+     */
+    odp_bool_t enable_nl_thread;
 
-	/**
-	 * Global ARP parameters.
-	 */
-	struct arp_s {
-		/** Maximum number of ARP entries. Default is OFP_ARP_ENTRIES. */
-		int entries;
+    /**
+     * Global ARP parameters.
+     */
+    struct arp_s {
+        /** Maximum number of ARP entries. Default is OFP_ARP_ENTRIES. */
+        int entries;
 
-		/** ARP hash bits. Default is OFP_ARP_HASH_BITS. */
-		int hash_bits;
+        /** ARP hash bits. Default is OFP_ARP_HASH_BITS. */
+        int hash_bits;
 
-		/** Entry timeout in seconds. Default is OFP_ARP_ENTRY_TIMEOUT. */
-		int entry_timeout;
+        /** Entry timeout in seconds. Default is OFP_ARP_ENTRY_TIMEOUT. */
+        int entry_timeout;
 
-		/**
-		 * Timeout (in seconds) for a packet waiting for ARP
-		 * to complete. Default is OFP_ARP_SAVED_PKT_TIMEOUT.
-		 */
-		int saved_pkt_timeout;
+        /**
+         * Timeout (in seconds) for a packet waiting for ARP
+         * to complete. Default is OFP_ARP_SAVED_PKT_TIMEOUT.
+         */
+        int saved_pkt_timeout;
 
-		/**
-		 * Reply to an ARP request only if the target address of the
-		 * request is an address of the receiving interface.
-		 * Ignore the request otherwise.
-		 *
-		 * If not set, reply to an ARP request for any local IP
-		 * address regardless of the receiving interface.
-		 *
-		 * See net.ipv4.conf.all.arp_ignore sysctl in Linux.
-		 *
-		 * Default value is 0.
-		 */
-		odp_bool_t check_interface;
-	} arp;
+        /**
+         * Reply to an ARP request only if the target address of the
+         * request is an address of the receiving interface.
+         * Ignore the request otherwise.
+         *
+         * If not set, reply to an ARP request for any local IP
+         * address regardless of the receiving interface.
+         *
+         * See net.ipv4.conf.all.arp_ignore sysctl in Linux.
+         *
+         * Default value is 0.
+         */
+        odp_bool_t check_interface;
+    } arp;
 
-	/**
-	 * Maximum number of events received at once. Default is
-	 * OFP_EVT_RX_BURST_SIZE.
-	 */
-	int evt_rx_burst_size;
+    /**
+     * Maximum number of events received at once. Default is
+     * OFP_EVT_RX_BURST_SIZE.
+     */
+    int evt_rx_burst_size;
 
-	/**
-	 * Number of packets sent at once (>= 1).
-	 * Default is OFP_PKT_TX_BURST_SIZE
-	 */
-	uint32_t pkt_tx_burst_size;
+    /**
+     * Number of packets sent at once (>= 1).
+     * Default is OFP_PKT_TX_BURST_SIZE
+     */
+    uint32_t pkt_tx_burst_size;
 
-	/**
-	 * Maximum number of TCP PCBs.
-	 * Default value is OFP_NUM_PCB_TCP_MAX
-	 */
-	int pcb_tcp_max;
+    /**
+     * Maximum number of TCP PCBs.
+     * Default value is OFP_NUM_PCB_TCP_MAX
+     */
+    int pcb_tcp_max;
 
-	struct pkt_pool_s {
-		/** Packet pool size; Default value is SHM_PKT_POOL_NB_PKTS */
-		int nb_pkts;
+    struct pkt_pool_s {
+        /** Packet pool size; Default value is SHM_PKT_POOL_NB_PKTS */
+        int nb_pkts;
 
-		/**
-		 * Packet pool buffer size;
-		 * Default value is SHM_PKT_POOL_BUFFER_SIZE
-		 */
-		unsigned long buffer_size;
-	} pkt_pool;
+        /**
+         * Packet pool buffer size;
+         * Default value is SHM_PKT_POOL_BUFFER_SIZE
+         */
+        unsigned long buffer_size;
+    } pkt_pool;
 
-	/**
-	 * Maximum number of VLANs. Default is OFP_NUM_VLAN.
-	 */
-	int num_vlan;
+    /**
+     * Maximum number of VLANs. Default is OFP_NUM_VLAN.
+     */
+    int num_vlan;
 
-	/**
-	 * IPv4 route mtrie parameters.
-	 */
-	struct mtrie_s {
-		/** Number of routes. Default is OFP_ROUTES. */
-		int routes;
-		/** Number of 8 bit mtrie nodes. Default is OFP_MTRIE_TABLE8_NODES. */
-		int table8_nodes;
-	} mtrie;
+    /**
+     * IPv4 route mtrie parameters.
+     */
+    struct mtrie_s {
+        /** Number of routes. Default is OFP_ROUTES. */
+        int routes;
+        /** Number of 8 bit mtrie nodes. Default is OFP_MTRIE_TABLE8_NODES. */
+        int table8_nodes;
+    } mtrie;
 
-	/**
-	 * Maximum number of VRFs. Default is OFP_NUM_VRF.
-	 *
-	 * VRF IDs used in interfaces and routes must be less than
-	 * this value.
-	 */
-	int num_vrf;
+    /**
+     * Maximum number of VRFs. Default is OFP_NUM_VRF.
+     *
+     * VRF IDs used in interfaces and routes must be less than
+     * this value.
+     */
+    int num_vrf;
 
-	/**
-	 * Checksum offloading options.
-	 */
-	ofp_chksum_offload_config_t chksum_offload;
+    /**
+     * Checksum offloading options.
+     */
+    ofp_chksum_offload_config_t chksum_offload;
 
-	/*
-	 * IPsec parameters
-	 */
-	struct ofp_ipsec_param ipsec;
+    /*
+     * IPsec parameters
+     */
+    struct ofp_ipsec_param ipsec;
 } ofp_global_param_t;
 
 /**

@@ -15,19 +15,19 @@
 #endif
 
 typedef union ofp_epoll_data {
-	void    *ptr;
-	int      fd;
-	uint32_t u32;
-	uint64_t u64;
+    void    *ptr;
+    int      fd;
+    uint32_t u32;
+    uint64_t u64;
 } ofp_epoll_data_t;
 
 struct ofp_epoll_event {
-	uint32_t events;
-	ofp_epoll_data_t data;
+    uint32_t events;
+    ofp_epoll_data_t data;
 };
 
 enum OFP_EPOLL_EVENTS {
-	OFP_EPOLLIN = 0x001,
+    OFP_EPOLLIN = 0x001,
 #define OFP_EPOLLIN OFP_EPOLLIN
 };
 

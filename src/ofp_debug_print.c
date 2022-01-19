@@ -36,242 +36,242 @@ static FILE *ofp_pkt_f = NULL;
 #endif
 static void print_arp(FILE *f, char *p)
 {
-	ofp_printf(f, "ARP %d  %s -> %s ",
-		p[7],						/* opcode */
-		ofp_print_ip_addr(*((uint32_t *)(p+14))),	/* sender IP */
-		ofp_print_ip_addr(*((uint32_t *)(p+24))));	/* target IP */
+    ofp_printf(f, "ARP %d  %s -> %s ",
+        p[7],                        /* opcode */
+        ofp_print_ip_addr(*((uint32_t *)(p+14))),    /* sender IP */
+        ofp_print_ip_addr(*((uint32_t *)(p+24))));    /* target IP */
 }
 
 static void print_ipv6(FILE *f, char *p)
 {
-	struct ofp_ip6_hdr *ip6hdr = (struct ofp_ip6_hdr *)p;
-	struct ofp_icmp6_hdr *icmp;
-	struct ofp_udphdr *uh;
+    struct ofp_ip6_hdr *ip6hdr = (struct ofp_ip6_hdr *)p;
+    struct ofp_icmp6_hdr *icmp;
+    struct ofp_udphdr *uh;
 
-	if (ip6hdr->ofp_ip6_nxt == OFP_IPPROTO_UDP) {
-		uh = (struct ofp_udphdr *)(ip6hdr + 1);
+    if (ip6hdr->ofp_ip6_nxt == OFP_IPPROTO_UDP) {
+        uh = (struct ofp_udphdr *)(ip6hdr + 1);
 
-		ofp_printf(f, "IPv6 UDP: len=%d  %s port %d -> %s port %d ",
-			odp_be_to_cpu_16(uh->uh_ulen),
-			ofp_print_ip6_addr(ip6hdr->ip6_src.ofp_s6_addr),
-			odp_be_to_cpu_16(uh->uh_sport),
-			ofp_print_ip6_addr(ip6hdr->ip6_dst.ofp_s6_addr),
-			odp_be_to_cpu_16(uh->uh_dport));
-	} else if (ip6hdr->ofp_ip6_nxt == OFP_IPPROTO_ICMPV6) {
-		icmp = (struct ofp_icmp6_hdr *)(ip6hdr + 1);
+        ofp_printf(f, "IPv6 UDP: len=%d  %s port %d -> %s port %d ",
+            odp_be_to_cpu_16(uh->uh_ulen),
+            ofp_print_ip6_addr(ip6hdr->ip6_src.ofp_s6_addr),
+            odp_be_to_cpu_16(uh->uh_sport),
+            ofp_print_ip6_addr(ip6hdr->ip6_dst.ofp_s6_addr),
+            odp_be_to_cpu_16(uh->uh_dport));
+    } else if (ip6hdr->ofp_ip6_nxt == OFP_IPPROTO_ICMPV6) {
+        icmp = (struct ofp_icmp6_hdr *)(ip6hdr + 1);
 
-		ofp_printf(f, "IPv6 ICMP: len=%d",
-			odp_be_to_cpu_16(ip6hdr->ofp_ip6_plen));
+        ofp_printf(f, "IPv6 ICMP: len=%d",
+            odp_be_to_cpu_16(ip6hdr->ofp_ip6_plen));
 
-		switch (icmp->icmp6_type) {
-		case OFP_ND_ROUTER_SOLICIT:
-			ofp_printf(f, " type=Router-Solicitation");
-			break;
-		case OFP_ND_ROUTER_ADVERT:
-			ofp_printf(f, " type=Router-Advertisement %s%s",
-				(icmp->ofp_icmp6_data8[1] & 0x80) ? "M" : "",
-				(icmp->ofp_icmp6_data8[1] & 0x40) ? "O" : "");
-			break;
-		case OFP_ND_NEIGHBOR_SOLICIT:
-			ofp_printf(f, " type=Neighbor-Solicitation target=%s",
-				ofp_print_ip6_addr(icmp->ofp_icmp6_data8 +
-						     4));
-			break;
-		case OFP_ND_NEIGHBOR_ADVERT:
-			ofp_printf(f,
-				" type=Neighbor-Advertisement %s%s%s target=%s",
-				(icmp->ofp_icmp6_data8[0] & 0x80) ? "R" : "",
-				(icmp->ofp_icmp6_data8[0] & 0x40) ? "S" : "",
-				(icmp->ofp_icmp6_data8[0] & 0x20) ? "O" : "",
-				ofp_print_ip6_addr(icmp->ofp_icmp6_data8 +
-						     4));
-			break;
-		case OFP_ND_REDIRECT:
-			ofp_printf(f, " type=Redirect target=%s destination=%s",
-				ofp_print_ip6_addr(icmp->ofp_icmp6_data8 +
-						     4),
-				ofp_print_ip6_addr(icmp->ofp_icmp6_data8 +
-						     20));
-			break;
-		default:
-			ofp_printf(f, " type=%d", icmp->icmp6_type);
-		}
+        switch (icmp->icmp6_type) {
+        case OFP_ND_ROUTER_SOLICIT:
+            ofp_printf(f, " type=Router-Solicitation");
+            break;
+        case OFP_ND_ROUTER_ADVERT:
+            ofp_printf(f, " type=Router-Advertisement %s%s",
+                (icmp->ofp_icmp6_data8[1] & 0x80) ? "M" : "",
+                (icmp->ofp_icmp6_data8[1] & 0x40) ? "O" : "");
+            break;
+        case OFP_ND_NEIGHBOR_SOLICIT:
+            ofp_printf(f, " type=Neighbor-Solicitation target=%s",
+                ofp_print_ip6_addr(icmp->ofp_icmp6_data8 +
+                             4));
+            break;
+        case OFP_ND_NEIGHBOR_ADVERT:
+            ofp_printf(f,
+                " type=Neighbor-Advertisement %s%s%s target=%s",
+                (icmp->ofp_icmp6_data8[0] & 0x80) ? "R" : "",
+                (icmp->ofp_icmp6_data8[0] & 0x40) ? "S" : "",
+                (icmp->ofp_icmp6_data8[0] & 0x20) ? "O" : "",
+                ofp_print_ip6_addr(icmp->ofp_icmp6_data8 +
+                             4));
+            break;
+        case OFP_ND_REDIRECT:
+            ofp_printf(f, " type=Redirect target=%s destination=%s",
+                ofp_print_ip6_addr(icmp->ofp_icmp6_data8 +
+                             4),
+                ofp_print_ip6_addr(icmp->ofp_icmp6_data8 +
+                             20));
+            break;
+        default:
+            ofp_printf(f, " type=%d", icmp->icmp6_type);
+        }
 
-		ofp_printf(f, " code=%d\n", icmp->icmp6_code);
-		ofp_printf(f, "  %s -> %s ",
-			ofp_print_ip6_addr(ip6hdr->ip6_src.ofp_s6_addr),
-			ofp_print_ip6_addr(ip6hdr->ip6_dst.ofp_s6_addr));
+        ofp_printf(f, " code=%d\n", icmp->icmp6_code);
+        ofp_printf(f, "  %s -> %s ",
+            ofp_print_ip6_addr(ip6hdr->ip6_src.ofp_s6_addr),
+            ofp_print_ip6_addr(ip6hdr->ip6_dst.ofp_s6_addr));
 
-	} else {
-		ofp_printf(f, "IPv6 PKT: len=%d next=%d %s -> %s ",
-			odp_be_to_cpu_16(ip6hdr->ofp_ip6_plen),
-			ip6hdr->ofp_ip6_nxt,
-			ofp_print_ip6_addr(ip6hdr->ip6_src.ofp_s6_addr),
-			ofp_print_ip6_addr(ip6hdr->ip6_dst.ofp_s6_addr));
-	}
+    } else {
+        ofp_printf(f, "IPv6 PKT: len=%d next=%d %s -> %s ",
+            odp_be_to_cpu_16(ip6hdr->ofp_ip6_plen),
+            ip6hdr->ofp_ip6_nxt,
+            ofp_print_ip6_addr(ip6hdr->ip6_src.ofp_s6_addr),
+            ofp_print_ip6_addr(ip6hdr->ip6_dst.ofp_s6_addr));
+    }
 }
 
 static void print_ipv4(FILE *f, char *p)
 {
-	struct ofp_ip *iphdr = (struct ofp_ip *)p;
-	struct ofp_icmp *icmp;
-	struct ofp_udphdr *uh;
-	struct ofp_tcphdr *th;
+    struct ofp_ip *iphdr = (struct ofp_ip *)p;
+    struct ofp_icmp *icmp;
+    struct ofp_udphdr *uh;
+    struct ofp_tcphdr *th;
 
-	/* if it's a non-first fragment, print only IPv4 information */
-	if ((odp_be_to_cpu_16(iphdr->ip_off) & 0x1fff) != 0) {
-		ofp_printf(f, "IP fragment PKT len=%d  %s -> %s ",
-			   odp_be_to_cpu_16(iphdr->ip_len),
-			   ofp_print_ip_addr(iphdr->ip_src.s_addr),
-			   ofp_print_ip_addr(iphdr->ip_dst.s_addr));
-		return;
-	}
+    /* if it's a non-first fragment, print only IPv4 information */
+    if ((odp_be_to_cpu_16(iphdr->ip_off) & 0x1fff) != 0) {
+        ofp_printf(f, "IP fragment PKT len=%d  %s -> %s ",
+               odp_be_to_cpu_16(iphdr->ip_len),
+               ofp_print_ip_addr(iphdr->ip_src.s_addr),
+               ofp_print_ip_addr(iphdr->ip_dst.s_addr));
+        return;
+    }
 
-	if (iphdr->ip_p == OFP_IPPROTO_UDP) {
-		uh = (struct ofp_udphdr *)(((uint8_t *)iphdr) +
-					     (iphdr->ip_hl<<2));
+    if (iphdr->ip_p == OFP_IPPROTO_UDP) {
+        uh = (struct ofp_udphdr *)(((uint8_t *)iphdr) +
+                         (iphdr->ip_hl<<2));
 
-		ofp_printf(f, "IP UDP PKT len=%d  %s:%d -> %s:%d ",
-			odp_be_to_cpu_16(uh->uh_ulen),
-			ofp_print_ip_addr(iphdr->ip_src.s_addr),
-			odp_be_to_cpu_16(uh->uh_sport),
-			ofp_print_ip_addr(iphdr->ip_dst.s_addr),
-			odp_be_to_cpu_16(uh->uh_dport));
+        ofp_printf(f, "IP UDP PKT len=%d  %s:%d -> %s:%d ",
+            odp_be_to_cpu_16(uh->uh_ulen),
+            ofp_print_ip_addr(iphdr->ip_src.s_addr),
+            odp_be_to_cpu_16(uh->uh_sport),
+            ofp_print_ip_addr(iphdr->ip_dst.s_addr),
+            odp_be_to_cpu_16(uh->uh_dport));
 
-	} else if (iphdr->ip_p == OFP_IPPROTO_TCP) {
-		th = (struct ofp_tcphdr *)(((uint8_t *)iphdr) +
-					     (iphdr->ip_hl<<2));
-		ofp_printf(f, "IP len=%d TCP %s:%d -> %s:%d\n"
-			"   seq=0x%x ack=0x%x off=%d\n   flags=",
-			odp_be_to_cpu_16(iphdr->ip_len),
-			ofp_print_ip_addr(iphdr->ip_src.s_addr),
-			odp_be_to_cpu_16(th->th_sport),
-			ofp_print_ip_addr(iphdr->ip_dst.s_addr),
-			odp_be_to_cpu_16(th->th_dport),
-			odp_be_to_cpu_32(th->th_seq),
-			odp_be_to_cpu_32(th->th_ack),
-			th->th_off);
-		if (th->th_flags & OFP_TH_FIN)
-			ofp_printf(f, "F");
-		if (th->th_flags & OFP_TH_SYN)
-			ofp_printf(f, "S");
-		if (th->th_flags & OFP_TH_RST)
-			ofp_printf(f, "R");
-		if (th->th_flags & OFP_TH_PUSH)
-			ofp_printf(f, "P");
-		if (th->th_flags & OFP_TH_ACK)
-			ofp_printf(f, "A");
-		if (th->th_flags & OFP_TH_URG)
-			ofp_printf(f, "U");
-		if (th->th_flags & OFP_TH_ECE)
-			ofp_printf(f, "E");
-		if (th->th_flags & OFP_TH_CWR)
-			ofp_printf(f, "C");
-		ofp_printf(f, " win=%u sum=0x%x urp=%u",
-			odp_be_to_cpu_16(th->th_win),
-			odp_be_to_cpu_16(th->th_sum),
-			odp_be_to_cpu_16(th->th_urp));
-		int i;
-		int len = odp_be_to_cpu_16(iphdr->ip_len);
+    } else if (iphdr->ip_p == OFP_IPPROTO_TCP) {
+        th = (struct ofp_tcphdr *)(((uint8_t *)iphdr) +
+                         (iphdr->ip_hl<<2));
+        ofp_printf(f, "IP len=%d TCP %s:%d -> %s:%d\n"
+            "   seq=0x%x ack=0x%x off=%d\n   flags=",
+            odp_be_to_cpu_16(iphdr->ip_len),
+            ofp_print_ip_addr(iphdr->ip_src.s_addr),
+            odp_be_to_cpu_16(th->th_sport),
+            ofp_print_ip_addr(iphdr->ip_dst.s_addr),
+            odp_be_to_cpu_16(th->th_dport),
+            odp_be_to_cpu_32(th->th_seq),
+            odp_be_to_cpu_32(th->th_ack),
+            th->th_off);
+        if (th->th_flags & OFP_TH_FIN)
+            ofp_printf(f, "F");
+        if (th->th_flags & OFP_TH_SYN)
+            ofp_printf(f, "S");
+        if (th->th_flags & OFP_TH_RST)
+            ofp_printf(f, "R");
+        if (th->th_flags & OFP_TH_PUSH)
+            ofp_printf(f, "P");
+        if (th->th_flags & OFP_TH_ACK)
+            ofp_printf(f, "A");
+        if (th->th_flags & OFP_TH_URG)
+            ofp_printf(f, "U");
+        if (th->th_flags & OFP_TH_ECE)
+            ofp_printf(f, "E");
+        if (th->th_flags & OFP_TH_CWR)
+            ofp_printf(f, "C");
+        ofp_printf(f, " win=%u sum=0x%x urp=%u",
+            odp_be_to_cpu_16(th->th_win),
+            odp_be_to_cpu_16(th->th_sum),
+            odp_be_to_cpu_16(th->th_urp));
+        int i;
+        int len = odp_be_to_cpu_16(iphdr->ip_len);
 #if 0
-		if (odp_be_to_cpu_16(th->th_win) == 0) {
-			/* wrong value */
-			ofp_printf(f, "\n---- th_win == 0, quit\n");
-			fflush(NULL);
-			int *a = 0;
-			*a = 8;
-		}
+        if (odp_be_to_cpu_16(th->th_win) == 0) {
+            /* wrong value */
+            ofp_printf(f, "\n---- th_win == 0, quit\n");
+            fflush(NULL);
+            int *a = 0;
+            *a = 8;
+        }
 #endif
-		if (len > 2000) {
-			ofp_printf(f, "\nToo long data!\n");
-			int *a = 0, b = 8, c = 9;
-			*a = b + c;
-		} else if (0) {
-			for (i = 0; i < len; i++) {
-				if ((i & 0xf) == 0)
-					ofp_printf(f, "\n");
-				ofp_printf(f, " %02x", (uint8_t)p[i]);
-			}
-		}
-	} else if (iphdr->ip_p == OFP_IPPROTO_ICMP) {
-		icmp = (struct ofp_icmp *)(((uint8_t *)iphdr) +
-					     (iphdr->ip_hl<<2));
+        if (len > 2000) {
+            ofp_printf(f, "\nToo long data!\n");
+            int *a = 0, b = 8, c = 9;
+            *a = b + c;
+        } else if (0) {
+            for (i = 0; i < len; i++) {
+                if ((i & 0xf) == 0)
+                    ofp_printf(f, "\n");
+                ofp_printf(f, " %02x", (uint8_t)p[i]);
+            }
+        }
+    } else if (iphdr->ip_p == OFP_IPPROTO_ICMP) {
+        icmp = (struct ofp_icmp *)(((uint8_t *)iphdr) +
+                         (iphdr->ip_hl<<2));
 
-		switch (icmp->icmp_type) {
-		case OFP_ICMP_ECHOREPLY:
-			ofp_printf(f,
-				"IP ICMP: echo reply  %s -> %s  id=%d seq=%d",
-				ofp_print_ip_addr(iphdr->ip_src.s_addr),
-				ofp_print_ip_addr(iphdr->ip_dst.s_addr),
-				icmp->ofp_icmp_id, icmp->ofp_icmp_seq);
-			break;
-		case OFP_ICMP_UNREACH:
-			ofp_printf(f, "IP ICMP: dest unreachable  %s -> %s ",
-				ofp_print_ip_addr(iphdr->ip_src.s_addr),
-				ofp_print_ip_addr(iphdr->ip_dst.s_addr));
-			break;
-		case OFP_ICMP_ECHO:
-			ofp_printf(f, "IP ICMP: echo  %s -> %s  id=%d seq=%d",
-				ofp_print_ip_addr(iphdr->ip_src.s_addr),
-				ofp_print_ip_addr(iphdr->ip_dst.s_addr),
-				icmp->ofp_icmp_id, icmp->ofp_icmp_seq);
-			break;
-		default:
-			ofp_printf(f, "IP ICMP %d: code=%d  %s -> %s ",
-				icmp->icmp_type, icmp->icmp_code,
-				ofp_print_ip_addr(iphdr->ip_src.s_addr),
-				ofp_print_ip_addr(iphdr->ip_dst.s_addr));
-		}
-	} else {
-		ofp_printf(f, "IP PKT len=%d proto=%d  %s -> %s ",
-			odp_be_to_cpu_16(iphdr->ip_len),
-			iphdr->ip_p,
-			ofp_print_ip_addr(iphdr->ip_src.s_addr),
-			ofp_print_ip_addr(iphdr->ip_dst.s_addr));
-	}
+        switch (icmp->icmp_type) {
+        case OFP_ICMP_ECHOREPLY:
+            ofp_printf(f,
+                "IP ICMP: echo reply  %s -> %s  id=%d seq=%d",
+                ofp_print_ip_addr(iphdr->ip_src.s_addr),
+                ofp_print_ip_addr(iphdr->ip_dst.s_addr),
+                icmp->ofp_icmp_id, icmp->ofp_icmp_seq);
+            break;
+        case OFP_ICMP_UNREACH:
+            ofp_printf(f, "IP ICMP: dest unreachable  %s -> %s ",
+                ofp_print_ip_addr(iphdr->ip_src.s_addr),
+                ofp_print_ip_addr(iphdr->ip_dst.s_addr));
+            break;
+        case OFP_ICMP_ECHO:
+            ofp_printf(f, "IP ICMP: echo  %s -> %s  id=%d seq=%d",
+                ofp_print_ip_addr(iphdr->ip_src.s_addr),
+                ofp_print_ip_addr(iphdr->ip_dst.s_addr),
+                icmp->ofp_icmp_id, icmp->ofp_icmp_seq);
+            break;
+        default:
+            ofp_printf(f, "IP ICMP %d: code=%d  %s -> %s ",
+                icmp->icmp_type, icmp->icmp_code,
+                ofp_print_ip_addr(iphdr->ip_src.s_addr),
+                ofp_print_ip_addr(iphdr->ip_dst.s_addr));
+        }
+    } else {
+        ofp_printf(f, "IP PKT len=%d proto=%d  %s -> %s ",
+            odp_be_to_cpu_16(iphdr->ip_len),
+            iphdr->ip_p,
+            ofp_print_ip_addr(iphdr->ip_src.s_addr),
+            ofp_print_ip_addr(iphdr->ip_dst.s_addr));
+    }
 }
 
 static int print_gre(FILE *f, char *p, uint16_t *proto)
 {
-	int len = 4;
-	struct ofp_gre_h *gre = (struct ofp_gre_h *)p;
+    int len = 4;
+    struct ofp_gre_h *gre = (struct ofp_gre_h *)p;
 
-	p += 4;
+    p += 4;
 
-	ofp_printf(f, "GRE proto=0x%04x ", odp_be_to_cpu_16(gre->ptype));
-	*proto = odp_be_to_cpu_16(gre->ptype);
+    ofp_printf(f, "GRE proto=0x%04x ", odp_be_to_cpu_16(gre->ptype));
+    *proto = odp_be_to_cpu_16(gre->ptype);
 
-	if ((gre->flags & OFP_GRE_CP) ||
-	    (gre->flags & OFP_GRE_RP)) {
-		len += 4; p += 4;
-	}
+    if ((gre->flags & OFP_GRE_CP) ||
+        (gre->flags & OFP_GRE_RP)) {
+        len += 4; p += 4;
+    }
 
-	if (gre->flags & OFP_GRE_KP) {
-		ofp_printf(f, "key=0x%02x%02x%02x%02x ", p[0], p[1], p[2], p[3]);
-		len += 4; p += 4;
-	}
+    if (gre->flags & OFP_GRE_KP) {
+        ofp_printf(f, "key=0x%02x%02x%02x%02x ", p[0], p[1], p[2], p[3]);
+        len += 4; p += 4;
+    }
 
-	if (gre->flags & OFP_GRE_SP) {
-		ofp_printf(f, "seq=0x%02x%02x%02x%02x ", p[0], p[1], p[2], p[3]);
-		len += 4; p += 4;
-	}
+    if (gre->flags & OFP_GRE_SP) {
+        ofp_printf(f, "seq=0x%02x%02x%02x%02x ", p[0], p[1], p[2], p[3]);
+        len += 4; p += 4;
+    }
 
-	if (gre->flags & OFP_GRE_RP)
-		ofp_printf(f, "routing ");
+    if (gre->flags & OFP_GRE_RP)
+        ofp_printf(f, "routing ");
 
-	return len;
+    return len;
 }
 
 #ifdef PRINT_PACKETS_BINARY
 static void print_pkt_binary(odp_packet_t pkt)
 {
-	uint32_t i;
-	uint8_t *pnt = odp_packet_data(pkt);
+    uint32_t i;
+    uint8_t *pnt = odp_packet_data(pkt);
 
-	OFP_LOG_NO_CTX_NO_LEVEL("PACKET:\n");
-	for (i = 0; i < odp_packet_len(pkt); i++)
-		OFP_LOG_NO_CTX_NO_LEVEL("%02hhx ", pnt[i]);
-	OFP_LOG_NO_CTX_NO_LEVEL("\n");
+    OFP_LOG_NO_CTX_NO_LEVEL("PACKET:\n");
+    for (i = 0; i < odp_packet_len(pkt); i++)
+        OFP_LOG_NO_CTX_NO_LEVEL("%02hhx ", pnt[i]);
+    OFP_LOG_NO_CTX_NO_LEVEL("\n");
 }
 #endif
 
@@ -368,12 +368,12 @@ void ofp_print_packet_buffer(FILE* f, const char *comment, uint8_t *p)
 
 void ofp_print_packet(const char *comment, odp_packet_t pkt)
 {
-	uint8_t *p;
-	uint32_t len;
+    uint8_t *p;
+    uint32_t len;
     FILE* f = NULL;
-	p = odp_packet_data(pkt);
-	len = odp_packet_len(pkt);
-	(void)len;
+    p = odp_packet_data(pkt);
+    len = odp_packet_len(pkt);
+    (void)len;
     if (ofp_debug_flags & OFP_DEBUG_PRINT_CONSOLE) {
         f = stdout;
     }
@@ -397,6 +397,6 @@ void ofp_print_packet(const char *comment, odp_packet_t pkt)
     ofp_print_packet_buffer(f, comment, p);
 
 #ifdef PRINT_PACKETS_BINARY
-	print_pkt_binary(pkt);
+    print_pkt_binary(pkt);
 #endif
 }

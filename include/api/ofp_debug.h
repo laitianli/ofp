@@ -2,7 +2,7 @@
  * Copyright (c) 2014, Nokia
  * All rights reserved.
  *
- * SPDX-License-Identifier:	BSD-3-Clause
+ * SPDX-License-Identifier:    BSD-3-Clause
  */
 
 #ifndef __OFP_DEBUG_H__

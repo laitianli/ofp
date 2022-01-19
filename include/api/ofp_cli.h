@@ -2,7 +2,7 @@
  * Copyright (c) 2014, Nokia
  * All rights reserved.
  *
- * SPDX-License-Identifier:	BSD-3-Clause
+ * SPDX-License-Identifier:    BSD-3-Clause
  */
 
 #ifndef __OFP_CLI_H__
@@ -27,7 +27,7 @@
  * @retval OFP_ENOTSUP OFP has been compiled without CLI support.
  */
 int ofp_start_cli_thread(odp_instance_t instance, int core_id,
-			 char *cli_file);
+             char *cli_file);
 
 /**
  * Stop CLI server thread.
@@ -108,7 +108,7 @@ typedef void (*ofp_cli_cb_func)(void *handle, const char *args);
  * @param  func  Function to call when CLI command is executed.
  */
 void ofp_cli_add_command(const char *cmd, const char *help,
-			 ofp_cli_cb_func func);
+             ofp_cli_cb_func func);
 
 /**
  * Get file descriptor (socket) to write the response.

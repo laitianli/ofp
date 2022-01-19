@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1982, 1986, 1988, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *    The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,7 +26,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)ip_input.c	8.2 (Berkeley) 1/4/94
+ *    @(#)ip_input.c    8.2 (Berkeley) 1/4/94
  */
 
 #include <odp_api.h>
@@ -47,32 +47,32 @@ uint8_t ofp_ip_protox_gre;
  */
 void ofp_ip_init(void)
 {
-	struct protosw *pr;
-	int i;
+    struct protosw *pr;
+    int i;
 
-	for (i = 0; i < OFP_IPPROTO_MAX; i++)
-		ofp_ip_protox[i] = 0;
+    for (i = 0; i < OFP_IPPROTO_MAX; i++)
+        ofp_ip_protox[i] = 0;
 
-	for (pr = ofp_inetdomain.dom_protosw;
-	    pr < ofp_inetdomain.dom_protoswNPROTOSW; pr++)
-		if (pr->pr_protocol < OFP_IPPROTO_MAX)
-			ofp_ip_protox[pr->pr_protocol] = pr -
-				ofp_inetdomain.dom_protosw;
-	ofp_ip_protox_udp = ofp_ip_protox[OFP_IPPROTO_UDP];
-	ofp_ip_protox_tcp = ofp_ip_protox[OFP_IPPROTO_TCP];
-	ofp_ip_protox_gre = ofp_ip_protox[OFP_IPPROTO_GRE];
+    for (pr = ofp_inetdomain.dom_protosw;
+        pr < ofp_inetdomain.dom_protoswNPROTOSW; pr++)
+        if (pr->pr_protocol < OFP_IPPROTO_MAX)
+            ofp_ip_protox[pr->pr_protocol] = pr -
+                ofp_inetdomain.dom_protosw;
+    ofp_ip_protox_udp = ofp_ip_protox[OFP_IPPROTO_UDP];
+    ofp_ip_protox_tcp = ofp_ip_protox[OFP_IPPROTO_TCP];
+    ofp_ip_protox_gre = ofp_ip_protox[OFP_IPPROTO_GRE];
 }
 
 #ifdef VIMAGE
-void	ofp_ip_destroy(void)
+void    ofp_ip_destroy(void)
 {
 }
 #endif
 
 enum ofp_return_code ofp_ip_input(odp_packet_t *pkt, int off)
 {
-	(void)pkt;
-	(void)off;
+    (void)pkt;
+    (void)off;
 
-	return OFP_PKT_CONTINUE;
+    return OFP_PKT_CONTINUE;
 }

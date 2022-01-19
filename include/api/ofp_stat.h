@@ -17,22 +17,22 @@
 #define OFP_LATENCY_SLICES 64
 
 struct ofp_packet_stat {
-	struct ODP_ALIGNED_CACHE {
-		uint64_t rx_fp;
-		uint64_t tx_fp;
-		uint64_t rx_sp;
-		uint64_t tx_sp;
-		uint64_t tx_eth_frag;
-		uint64_t rx_ip_frag;
-		uint64_t rx_ip_reass;
-		uint64_t input_latency[OFP_LATENCY_SLICES];
-		odp_time_t last_input_cycles;
-	} per_thr[ODP_THREAD_COUNT_MAX];
+    struct ODP_ALIGNED_CACHE {
+        uint64_t rx_fp;
+        uint64_t tx_fp;
+        uint64_t rx_sp;
+        uint64_t tx_sp;
+        uint64_t tx_eth_frag;
+        uint64_t rx_ip_frag;
+        uint64_t rx_ip_reass;
+        uint64_t input_latency[OFP_LATENCY_SLICES];
+        odp_time_t last_input_cycles;
+    } per_thr[ODP_THREAD_COUNT_MAX];
 };
 
 struct ofp_perf_stat {
-	uint64_t rx_fp_pps;
-	uint64_t rx_prev_sum;
+    uint64_t rx_fp_pps;
+    uint64_t rx_prev_sum;
 };
 
 /* Stats: Get stats */

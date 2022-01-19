@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1982, 1986, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *    The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,7 +26,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)domain.h	8.1 (Berkeley) 6/2/93
+ *    @(#)domain.h    8.1 (Berkeley) 6/2/93
  * $FreeBSD: release/9.1.0/sys/sys/domain.h 195837 2009-07-23 20:46:49Z rwatson$
  */
 
@@ -40,40 +40,40 @@
 /*
  * Forward structure declarations for function prototypes [sic].
  */
-struct	mbuf;
-struct	ifnet;
-struct	protosw;
+struct    mbuf;
+struct    ifnet;
+struct    protosw;
 
 struct domain {
-	int	dom_family;		/* OFP_AF_xxx */
-	const char	*dom_name;
+    int    dom_family;        /* OFP_AF_xxx */
+    const char    *dom_name;
 
-	void	(*dom_init)		/* initialize domain data structures */
-		(void);
-	void	(*dom_destroy)		/* cleanup structures / state */
-		(void);
-	int	(*dom_externalize)	/* externalize access rights */
-		(odp_packet_t , odp_packet_t *);
-	void	(*dom_dispose)		/* dispose of internalized rights */
-		(odp_packet_t);
-	struct	protosw *dom_protosw, *dom_protoswNPROTOSW;
-	struct	domain *dom_next;
+    void    (*dom_init)        /* initialize domain data structures */
+        (void);
+    void    (*dom_destroy)        /* cleanup structures / state */
+        (void);
+    int    (*dom_externalize)    /* externalize access rights */
+        (odp_packet_t , odp_packet_t *);
+    void    (*dom_dispose)        /* dispose of internalized rights */
+        (odp_packet_t);
+    struct    protosw *dom_protosw, *dom_protoswNPROTOSW;
+    struct    domain *dom_next;
 
-	int	(*dom_rtattach)		/* initialize routing table */
-		(void **, int);
-	int	(*dom_rtdetach)		/* clean up routing table */
-		(void **, int);
-	int	dom_rtoffset;		/* an arg to rtattach, in bits */
-		/* XXX MRT.
-		 * rtoffset May be 0 if the domain supplies its own rtattach(),
-		 * in which case, a 0 indicates it's being called from
-		 * vfs_export.c (HACK)  Only for OFP_AF_INET{,6} at this time.
-		 * Temporary ABI compat hack.. fix post RELENG_7
-		 */
-	int	dom_maxrtkey;		/* for routing layer */
-	void	*(*dom_ifattach)(struct ifnet *);
-	void	(*dom_ifdetach)(struct ifnet *, void *);
-					/* af-dependent data on ifnet */
+    int    (*dom_rtattach)        /* initialize routing table */
+        (void **, int);
+    int    (*dom_rtdetach)        /* clean up routing table */
+        (void **, int);
+    int    dom_rtoffset;        /* an arg to rtattach, in bits */
+        /* XXX MRT.
+         * rtoffset May be 0 if the domain supplies its own rtattach(),
+         * in which case, a 0 indicates it's being called from
+         * vfs_export.c (HACK)  Only for OFP_AF_INET{,6} at this time.
+         * Temporary ABI compat hack.. fix post RELENG_7
+         */
+    int    dom_maxrtkey;        /* for routing layer */
+    void    *(*dom_ifattach)(struct ifnet *);
+    void    (*dom_ifdetach)(struct ifnet *, void *);
+                    /* af-dependent data on ifnet */
 };
 
 void domain_init(void *arg);

@@ -19,12 +19,12 @@
 
 __attribute__((constructor)) static void setup_wrappers(void)
 {
-	setup_socket_wrappers();
-	setup_sockopt_wrappers();
-	setup_ioctl_wrappers();
-	setup_fork_wrappers();
-	setup_select_wrappers();
-	setup_uio_wrappers();
-	setup_sendfile_wrappers();
-	setup_epoll_wrappers();
+    setup_socket_wrappers();
+    setup_sockopt_wrappers();
+    setup_ioctl_wrappers();
+    setup_fork_wrappers();
+    setup_select_wrappers();
+    setup_uio_wrappers();
+    setup_sendfile_wrappers();
+    setup_epoll_wrappers();
 }

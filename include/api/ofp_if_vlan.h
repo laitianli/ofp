@@ -37,7 +37,7 @@
  */
 
 #ifndef _OFP_IF_VLAN_H_
-#define	_OFP_IF_VLAN_H_	1
+#define    _OFP_IF_VLAN_H_    1
 
 #include "ofp_ethernet.h"
 
@@ -45,22 +45,22 @@
 #pragma GCC visibility push(default)
 #endif
 
-struct	ofp_ether_vlan_header {
-	uint8_t evl_dhost[OFP_ETHER_ADDR_LEN];
-	uint8_t evl_shost[OFP_ETHER_ADDR_LEN];
-	uint16_t evl_encap_proto;
-	uint16_t evl_tag;
-	uint16_t evl_proto;
+struct    ofp_ether_vlan_header {
+    uint8_t evl_dhost[OFP_ETHER_ADDR_LEN];
+    uint8_t evl_shost[OFP_ETHER_ADDR_LEN];
+    uint16_t evl_encap_proto;
+    uint16_t evl_tag;
+    uint16_t evl_proto;
 } __attribute__((packed));
 
-#define	OFP_EVL_VLID_MASK		0x0FFF
-#define	OFP_EVL_PRI_MASK		0xE000
-#define	OFP_EVL_VLANOFTAG(tag)	((tag) & OFP_EVL_VLID_MASK)
-#define	OFP_EVL_PRIOFTAG(tag)	(((tag) >> 13) & 7)
-#define	OFP_EVL_CFIOFTAG(tag)	(((tag) >> 12) & 1)
-#define	OFP_EVL_MAKETAG(vlid, pri, cfi)				\
-	((((((pri) & 7) << 1) | ((cfi) & 1)) << 12) | ((vlid) &		\
-						OFP_EVL_VLID_MASK))	\
+#define    OFP_EVL_VLID_MASK        0x0FFF
+#define    OFP_EVL_PRI_MASK        0xE000
+#define    OFP_EVL_VLANOFTAG(tag)    ((tag) & OFP_EVL_VLID_MASK)
+#define    OFP_EVL_PRIOFTAG(tag)    (((tag) >> 13) & 7)
+#define    OFP_EVL_CFIOFTAG(tag)    (((tag) >> 12) & 1)
+#define    OFP_EVL_MAKETAG(vlid, pri, cfi)                \
+    ((((((pri) & 7) << 1) | ((cfi) & 1)) << 12) | ((vlid) &        \
+                        OFP_EVL_VLID_MASK))    \
 
 #if __GNUC__ >= 4
 #pragma GCC visibility pop

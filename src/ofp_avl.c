@@ -54,12 +54,12 @@
  * Shared data
  */
 struct ofp_avl_mem {
-	avl_node *free_nodes;
-	avl_tree trees[NUM_TREES];
-	avl_tree *free_trees;
-	int tree_cnt;
-	int nodes_allocated, max_nodes_allocated;
-	avl_node node_list[0];
+    avl_node *free_nodes;
+    avl_tree trees[NUM_TREES];
+    avl_tree *free_trees;
+    int tree_cnt;
+    int nodes_allocated, max_nodes_allocated;
+    avl_node node_list[0];
 };
 
 /*
@@ -129,59 +129,59 @@ avl_tree *
 avl_tree_new (avl_key_compare_fun_type compare_fun,
               void * compare_arg)
 {
-	avl_tree * t = avl_mem_tree_alloc();
+    avl_tree * t = avl_mem_tree_alloc();
 
-	if (!t) {
-		OFP_ERR("avl_mem_tree_alloc failed");
-		return NULL;
-	} else {
-		avl_node * root = avl_node_new((void *)NULL, (avl_node *) NULL);
-		if (!root) {
-			return NULL;
-		} else {
-			t->root = root;
-			t->height = 0;
-			t->length = 0;
-			t->compare_fun = compare_fun;
-			t->compare_arg = compare_arg;
-			ofp_brlock_init(&t->lock_rw);
-			thread_rwlock_create(&t->rwlock);
-			return t;
-		}
-	}
+    if (!t) {
+        OFP_ERR("avl_mem_tree_alloc failed");
+        return NULL;
+    } else {
+        avl_node * root = avl_node_new((void *)NULL, (avl_node *) NULL);
+        if (!root) {
+            return NULL;
+        } else {
+            t->root = root;
+            t->height = 0;
+            t->length = 0;
+            t->compare_fun = compare_fun;
+            t->compare_arg = compare_arg;
+            ofp_brlock_init(&t->lock_rw);
+            thread_rwlock_create(&t->rwlock);
+            return t;
+        }
+    }
 }
 
 static void
 avl_tree_free_helper (avl_node * node, avl_free_key_fun_type free_key_fun)
 {
-	if (node->left) {
-		avl_tree_free_helper (node->left, free_key_fun);
-	}
-	if (free_key_fun)
-		free_key_fun (node->key);
-	if (node->right) {
-		avl_tree_free_helper (node->right, free_key_fun);
-	}
+    if (node->left) {
+        avl_tree_free_helper (node->left, free_key_fun);
+    }
+    if (free_key_fun)
+        free_key_fun (node->key);
+    if (node->right) {
+        avl_tree_free_helper (node->right, free_key_fun);
+    }
 #ifdef HAVE_AVL_NODE_LOCK
-	thread_rwlock_destroy (&node->rwlock);
+    thread_rwlock_destroy (&node->rwlock);
 #endif
-	avl_mem_node_free(node);
+    avl_mem_node_free(node);
 }
 
 void
 avl_tree_free (avl_tree * tree, avl_free_key_fun_type free_key_fun)
 {
-	if (tree->length) {
-		avl_tree_free_helper (tree->root->right, free_key_fun);
-	}
-	if (tree->root) {
+    if (tree->length) {
+        avl_tree_free_helper (tree->root->right, free_key_fun);
+    }
+    if (tree->root) {
 #ifdef HAVE_AVL_NODE_LOCK
-		thread_rwlock_destroy(&tree->root->rwlock);
+        thread_rwlock_destroy(&tree->root->rwlock);
 #endif
-		avl_mem_node_free(tree->root);
-	}
-	thread_rwlock_destroy(&tree->rwlock);
-	avl_mem_tree_free(tree);
+        avl_mem_node_free(tree->root);
+    }
+    thread_rwlock_destroy(&tree->rwlock);
+    avl_mem_tree_free(tree);
 }
 
 int
@@ -829,8 +829,8 @@ avl_iterate_index_range (avl_tree * tree,
     }
     num = (high - low);
     /* find the <low>th node
-	 * internal index start from 1 while external index start from 0
-	 */
+     * internal index start from 1 while external index start from 0
+     */
     m = low + 1;
     node = tree->root->right;
     while (1) {
@@ -844,9 +844,9 @@ avl_iterate_index_range (avl_tree * tree,
         }
     }
     /* call <iter_fun> on <node>, <get_next(node)>, ... */
-	i = 0;
+    i = 0;
     while (i < num) {
-		i++;
+        i++;
         if (iter_fun(low + i, node->key, iter_arg) != 0)
             return -1;
         node = avl_get_next(node);
@@ -1128,7 +1128,7 @@ avl_verify_rank (avl_node * node)
             num_right = avl_verify_rank (node->right);
         }
         if (AVL_GET_RANK (node) != num_left + 1) {
-		OFP_ERR("Invalid rank at node %ld", (long) node->key);
+        OFP_ERR("Invalid rank at node %ld", (long) node->key);
         }
         return (num_left + num_right + 1);
     }
@@ -1294,75 +1294,75 @@ void ofp_print_avl_stat(int fd)
 
 static int ofp_avl_alloc_shared_memory(void)
 {
-	shm = ofp_shared_memory_alloc(SHM_NAME_AVL, SHM_SIZE_AVL);
-	if (shm == NULL) {
-		OFP_ERR("ofp_shared_memory_alloc failed");
-		return -1;
-	}
+    shm = ofp_shared_memory_alloc(SHM_NAME_AVL, SHM_SIZE_AVL);
+    if (shm == NULL) {
+        OFP_ERR("ofp_shared_memory_alloc failed");
+        return -1;
+    }
 
-	memset(shm, 0, SHM_SIZE_AVL);
+    memset(shm, 0, SHM_SIZE_AVL);
 
-	return 0;
+    return 0;
 }
 
 static int ofp_avl_free_shared_memory(void)
 {
-	int rc = 0;
+    int rc = 0;
 
-	if (ofp_shared_memory_free(SHM_NAME_AVL) == -1) {
-		OFP_ERR("ofp_shared_memory_free failed");
-		rc = -1;
-	}
-	shm = NULL;
-	return rc;
+    if (ofp_shared_memory_free(SHM_NAME_AVL) == -1) {
+        OFP_ERR("ofp_shared_memory_free failed");
+        rc = -1;
+    }
+    shm = NULL;
+    return rc;
 }
 
 int ofp_avl_lookup_shared_memory(void)
 {
-	shm = ofp_shared_memory_lookup(SHM_NAME_AVL);
-	if (shm == NULL) {
-		OFP_ERR("ofp_shared_memory_lookup failed");
-		return -1;
-	}
+    shm = ofp_shared_memory_lookup(SHM_NAME_AVL);
+    if (shm == NULL) {
+        OFP_ERR("ofp_shared_memory_lookup failed");
+        return -1;
+    }
 
-	return 0;
+    return 0;
 }
 
 void ofp_avl_init_prepare(void)
 {
-	ofp_shared_memory_prealloc(SHM_NAME_AVL, SHM_SIZE_AVL);
+    ofp_shared_memory_prealloc(SHM_NAME_AVL, SHM_SIZE_AVL);
 }
 
 int ofp_avl_init_global(void)
 {
-	uint32_t i;
+    uint32_t i;
 
-	HANDLE_ERROR(ofp_avl_alloc_shared_memory());
+    HANDLE_ERROR(ofp_avl_alloc_shared_memory());
 
-	for (i = 0; i < NUM_NODES; i++)
-		shm->node_list[i].right = (i == NUM_NODES - 1) ?
-			NULL : &(shm->node_list[i+1]);
+    for (i = 0; i < NUM_NODES; i++)
+        shm->node_list[i].right = (i == NUM_NODES - 1) ?
+            NULL : &(shm->node_list[i+1]);
 
-	shm->free_nodes = &(shm->node_list[0]);
+    shm->free_nodes = &(shm->node_list[0]);
 
-	for (i = 0; i < NUM_TREES; i++)
-		shm->trees[i].compare_arg = (i == NUM_TREES - 1) ?
-			NULL : &(shm->trees[i+1]);
+    for (i = 0; i < NUM_TREES; i++)
+        shm->trees[i].compare_arg = (i == NUM_TREES - 1) ?
+            NULL : &(shm->trees[i+1]);
 
-	shm->free_trees = &(shm->trees[0]);
-	shm->tree_cnt = 0;
+    shm->free_trees = &(shm->trees[0]);
+    shm->tree_cnt = 0;
 
-	return 0;
+    return 0;
 }
 
 int ofp_avl_term_global(void)
 {
-	int rc = 0;
+    int rc = 0;
 
-	if (ofp_avl_lookup_shared_memory())
-		return -1;
+    if (ofp_avl_lookup_shared_memory())
+        return -1;
 
-	CHECK_ERROR(ofp_avl_free_shared_memory(), rc);
+    CHECK_ERROR(ofp_avl_free_shared_memory(), rc);
 
-	return rc;
+    return rc;
 }

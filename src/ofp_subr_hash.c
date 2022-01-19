@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1982, 1986, 1991, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *    The Regents of the University of California.  All rights reserved.
  * Copyright (c) 2014, Nokia
  * Copyright (c) 2014, Enea Software AB
  * (c) UNIX System Laboratories, Inc.
@@ -33,7 +33,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)kern_subr.c	8.3 (Berkeley) 1/21/94
+ *    @(#)kern_subr.c    8.3 (Berkeley) 1/21/94
  */
 
 #include <odp_api.h>
@@ -48,17 +48,17 @@
  */
 void
 ofp_tcp_hashinit(long hashsize, uint64_t *hashmask,
-	void *tcp_hashtbl)
+    void *tcp_hashtbl)
 {
-	OFP_LIST_HEAD(generic, generic) *hashtbl = tcp_hashtbl;
-	int i;
+    OFP_LIST_HEAD(generic, generic) *hashtbl = tcp_hashtbl;
+    int i;
 
-	if (hashtbl != NULL) {
-		for (i = 0; i < hashsize; i++)
-			OFP_LIST_INIT(&hashtbl[i]);
-		*hashmask = hashsize - 1;
-	}
-	return;
+    if (hashtbl != NULL) {
+        for (i = 0; i < hashsize; i++)
+            OFP_LIST_INIT(&hashtbl[i]);
+        *hashmask = hashsize - 1;
+    }
+    return;
 }
 
 /*
@@ -66,34 +66,34 @@ ofp_tcp_hashinit(long hashsize, uint64_t *hashmask,
  */
 void *
 ofp_hashinit_flags(int elements, void *type, uint64_t *hashmask,
-	       int flags)
+           int flags)
 {
-	long hashsize;
-	OFP_LIST_HEAD(generic, generic) *hashtbl;
-	int i;
+    long hashsize;
+    OFP_LIST_HEAD(generic, generic) *hashtbl;
+    int i;
 
-	(void)type;
+    (void)type;
 
-	KASSERT(elements > 0, ("%s: bad elements", __func__));
-	/* Exactly one of HASH_WAITOK and HASH_NOWAIT must be set. */
-	KASSERT((flags & HASH_WAITOK) ^ (flags & HASH_NOWAIT),
-	    ("Bad flags (0x%x) passed to ofp_hashinit_flags", flags));
+    KASSERT(elements > 0, ("%s: bad elements", __func__));
+    /* Exactly one of HASH_WAITOK and HASH_NOWAIT must be set. */
+    KASSERT((flags & HASH_WAITOK) ^ (flags & HASH_NOWAIT),
+        ("Bad flags (0x%x) passed to ofp_hashinit_flags", flags));
 
-	for (hashsize = 1; hashsize <= elements; hashsize <<= 1)
-		continue;
-	hashsize >>= 1;
+    for (hashsize = 1; hashsize <= elements; hashsize <<= 1)
+        continue;
+    hashsize >>= 1;
 
-	if (flags & HASH_NOWAIT)
-		hashtbl = malloc((uint64_t)hashsize * sizeof(*hashtbl));
-	else
-		hashtbl = malloc((uint64_t)hashsize * sizeof(*hashtbl));
+    if (flags & HASH_NOWAIT)
+        hashtbl = malloc((uint64_t)hashsize * sizeof(*hashtbl));
+    else
+        hashtbl = malloc((uint64_t)hashsize * sizeof(*hashtbl));
 
-	if (hashtbl != NULL) {
-		for (i = 0; i < hashsize; i++)
-			OFP_LIST_INIT(&hashtbl[i]);
-		*hashmask = hashsize - 1;
-	}
-	return (hashtbl);
+    if (hashtbl != NULL) {
+        for (i = 0; i < hashsize; i++)
+            OFP_LIST_INIT(&hashtbl[i]);
+        *hashmask = hashsize - 1;
+    }
+    return (hashtbl);
 }
 
 /*
@@ -103,25 +103,25 @@ void *
 ofp_hashinit(int elements, void *type, uint64_t *hashmask)
 {
 
-	return (ofp_hashinit_flags(elements, type, hashmask, HASH_WAITOK));
+    return (ofp_hashinit_flags(elements, type, hashmask, HASH_WAITOK));
 }
 
 void
 ofp_hashdestroy(void *vhashtbl, void *type, uint64_t hashmask)
 {
-	(void)type;
+    (void)type;
 
-	OFP_LIST_HEAD(generic, generic) *hashtbl, *hp;
+    OFP_LIST_HEAD(generic, generic) *hashtbl, *hp;
 
-	hashtbl = vhashtbl;
-	for (hp = hashtbl; hp <= &hashtbl[hashmask]; hp++)
-		KASSERT(OFP_LIST_EMPTY(hp), ("%s: hash not empty", __func__));
-	free(hashtbl);
+    hashtbl = vhashtbl;
+    for (hp = hashtbl; hp <= &hashtbl[hashmask]; hp++)
+        KASSERT(OFP_LIST_EMPTY(hp), ("%s: hash not empty", __func__));
+    free(hashtbl);
 }
 
 static const int primes[] = { 1, 13, 31, 61, 127, 251, 509, 761, 1021, 1531,
-			2039, 2557, 3067, 3583, 4093, 4603, 5119, 5623, 6143,
-			6653, 7159, 7673, 8191, 12281, 16381, 24571, 32749 };
+            2039, 2557, 3067, 3583, 4093, 4603, 5119, 5623, 6143,
+            6653, 7159, 7673, 8191, 12281, 16381, 24571, 32749 };
 #define NPRIMES (sizeof(primes) / sizeof(primes[0]))
 
 /*
@@ -130,23 +130,23 @@ static const int primes[] = { 1, 13, 31, 61, 127, 251, 509, 761, 1021, 1531,
 void *
 ofp_phashinit(int elements, void *type, uint64_t *nentries)
 {
-	long hashsize;
-	OFP_LIST_HEAD(generic, generic) *hashtbl;
-	int i;
+    long hashsize;
+    OFP_LIST_HEAD(generic, generic) *hashtbl;
+    int i;
 
-	(void)type;
+    (void)type;
 
-	KASSERT(elements > 0, ("%s: bad elements", __func__));
-	for (i = 1, hashsize = primes[1]; hashsize <= elements;) {
-		i++;
-		if (i == NPRIMES)
-			break;
-		hashsize = primes[i];
-	}
-	hashsize = primes[i - 1];
-	hashtbl = malloc((uint64_t)hashsize * sizeof(*hashtbl));
-	for (i = 0; i < hashsize; i++)
-		OFP_LIST_INIT(&hashtbl[i]);
-	*nentries = hashsize;
-	return (hashtbl);
+    KASSERT(elements > 0, ("%s: bad elements", __func__));
+    for (i = 1, hashsize = primes[1]; hashsize <= elements;) {
+        i++;
+        if (i == NPRIMES)
+            break;
+        hashsize = primes[i];
+    }
+    hashsize = primes[i - 1];
+    hashtbl = malloc((uint64_t)hashsize * sizeof(*hashtbl));
+    for (i = 0; i < hashsize; i++)
+        OFP_LIST_INIT(&hashtbl[i]);
+    *nentries = hashsize;
+    return (hashtbl);
 }

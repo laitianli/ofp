@@ -2,7 +2,7 @@
  * Copyright (c) 2014, Nokia
  * All rights reserved.
  *
- * SPDX-License-Identifier:	BSD-3-Clause
+ * SPDX-License-Identifier:    BSD-3-Clause
  */
 
 #include <odp_api.h>
@@ -17,25 +17,25 @@
 int ofp_inet_init(void)
 {
 #ifdef INET
-	domain_init(&ofp_inetdomain);
+    domain_init(&ofp_inetdomain);
 #endif /* INET */
 
 #ifdef INET6
-	domain_init(&ofp_inet6domain);
+    domain_init(&ofp_inet6domain);
 #endif /* INET6 */
 
-	return 0;
+    return 0;
 }
 
 int ofp_inet_term(void)
 {
 #ifdef INET
-	domain_uninit(&ofp_inetdomain);
+    domain_uninit(&ofp_inetdomain);
 #endif /* INET */
 
 #ifdef INET6
-	domain_uninit(&ofp_inet6domain);
+    domain_uninit(&ofp_inet6domain);
 #endif /* INET6 */
 
-	return 0;
+    return 0;
 }

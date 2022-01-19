@@ -6,7 +6,7 @@
  */
 
 #ifndef _OFPI_IF_VLAN_H_
-#define	_OFPI_IF_VLAN_H_	1
+#define    _OFPI_IF_VLAN_H_    1
 
 #include "api/ofp_if_vlan.h"
 

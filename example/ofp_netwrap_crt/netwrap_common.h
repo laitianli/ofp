@@ -13,13 +13,13 @@
 #endif
 #include <dlfcn.h>
 
-#define LIBC_FUNCTION(func) do {			\
-		libc_##func = dlsym(RTLD_NEXT, #func);	\
-		if (dlerror()) {			\
-			errno = EACCES;			\
-			exit(1);			\
-		}					\
-	} while (0)
+#define LIBC_FUNCTION(func) do {            \
+        libc_##func = dlsym(RTLD_NEXT, #func);    \
+        if (dlerror()) {            \
+            errno = EACCES;            \
+            exit(1);            \
+        }                    \
+    } while (0)
 
 #define IS_OFP_SOCKET(_fd) (_fd >= OFP_SOCK_NUM_OFFSET)
 

@@ -2,7 +2,7 @@
  * Copyright (c) 2014, Nokia
  * All rights reserved.
  *
- * SPDX-License-Identifier:	BSD-3-Clause
+ * SPDX-License-Identifier:    BSD-3-Clause
  */
 
 #include "ofp.h"
@@ -12,12 +12,12 @@
 
 int shutdown_socket(int fd)
 {
-	if (ofp_shutdown(fd, OFP_SHUT_RDWR) == -1) {
-		OFP_ERR("Faild to shutdown socket (errno = %d)\n",
-			ofp_errno);
-		return -1;
-	}
+    if (ofp_shutdown(fd, OFP_SHUT_RDWR) == -1) {
+        OFP_ERR("Faild to shutdown socket (errno = %d)\n",
+            ofp_errno);
+        return -1;
+    }
 
-	OFP_INFO("SUCCESS.\n");
-	return 0;
+    OFP_INFO("SUCCESS.\n");
+    return 0;
 }

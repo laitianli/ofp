@@ -29,7 +29,7 @@
 
 /*-
  * Copyright (c) 1982, 1986, 1989, 1993
- *	The Regents of the University of California.
+ *    The Regents of the University of California.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -56,7 +56,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)udp_var.h	8.1 (Berkeley) 6/10/93
+ *    @(#)udp_var.h    8.1 (Berkeley) 6/10/93
  * $FreeBSD: release/9.1.0/sys/netinet6/udp6_var.h 174510 2007-12-10 16:03:40Z obrien $
  */
 
@@ -69,9 +69,9 @@
 SYSCTL_DECL(_net_inet6_udp6);
 #endif
 
-extern struct pr_usrreqs	ofp_udp6_usrreqs;
+extern struct pr_usrreqs    ofp_udp6_usrreqs;
 
-void	ofp_udp6_ctlinput(int, struct ofp_sockaddr *, void *);
+void    ofp_udp6_ctlinput(int, struct ofp_sockaddr *, void *);
 enum ofp_return_code ofp_udp6_input(odp_packet_t *, int *, int *);
 
 #endif /*_NETINET6_UDP6_VAR_H_*/

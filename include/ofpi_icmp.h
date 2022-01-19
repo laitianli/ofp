@@ -15,6 +15,6 @@ enum ofp_return_code ofp_icmp_error(odp_packet_t pkt_in, int type, int code, uin
 
 enum ofp_return_code
 _ofp_icmp_input(odp_packet_t pkt_icmp, struct ofp_ip *ip, struct ofp_icmp *icp,
-		enum ofp_return_code (*reflect)(odp_packet_t pkt));
+        enum ofp_return_code (*reflect)(odp_packet_t pkt));
 
 #endif

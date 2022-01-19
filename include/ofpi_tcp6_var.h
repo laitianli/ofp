@@ -29,7 +29,7 @@
 
 /*-
  * Copyright (c) 1982, 1986, 1993, 1994, 1995
- *	The Regents of the University of California.  All rights reserved.
+ *    The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -55,7 +55,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)tcp_var.h	8.4 (Berkeley) 5/24/95
+ *    @(#)tcp_var.h    8.4 (Berkeley) 5/24/95
  * $FreeBSD: release/9.1.0/sys/netinet6/tcp6_var.h 195727 2009-07-16 21:13:04Z rwatson $
  */
 
@@ -68,19 +68,19 @@
 #ifdef SYSCTL_DECL
 SYSCTL_DECL(_net_inet6_tcp6);
 
-VNET_DECLARE(int, ofp_tcp_v6mssdflt);	/* XXX */
-#define	V_tcp_v6mssdflt			VNET(ofp_tcp_v6mssdflt)
+VNET_DECLARE(int, ofp_tcp_v6mssdflt);    /* XXX */
+#define    V_tcp_v6mssdflt            VNET(ofp_tcp_v6mssdflt)
 #endif
 
-struct	ofp_ip6_hdr;
+struct    ofp_ip6_hdr;
 
-void	ofp_tcp6_ctlinput __P((int, struct ofp_sockaddr *, void *));
-/*void	tcp6_init __P((void));*/
-enum ofp_return_code	ofp_tcp6_input __P((odp_packet_t *, int *, int *));
+void    ofp_tcp6_ctlinput __P((int, struct ofp_sockaddr *, void *));
+/*void    tcp6_init __P((void));*/
+enum ofp_return_code    ofp_tcp6_input __P((odp_packet_t *, int *, int *));
 /*
-struct	rtentry *tcp_rtlookup6(struct in_conninfo *);
+struct    rtentry *tcp_rtlookup6(struct in_conninfo *);
 */
 
-extern struct	pr_usrreqs ofp_tcp6_usrreqs;
+extern struct    pr_usrreqs ofp_tcp6_usrreqs;
 
 #endif /* _NETINET_TCP6_VAR_H_ */

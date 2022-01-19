@@ -3,7 +3,7 @@
   * Copyright (c) 2015, ENEA Software AB
   * All rights reserved.
   *
-  * SPDX-License-Identifier:	BSD-3-Clause
+  * SPDX-License-Identifier:    BSD-3-Clause
   */
 
 #ifndef _SYSCTL_H_

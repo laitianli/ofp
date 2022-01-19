@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1982, 1986, 1993
- *	The Regents of the University of California.
+ *    The Regents of the University of California.
  * Copyright (c) 2015 Nokia Solutions and Networks
  * Copyright (c) 2015 Enea Software AB
  * All rights reserved.
@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)tcp_timer.h	8.1 (Berkeley) 6/10/93
+ *    @(#)tcp_timer.h    8.1 (Berkeley) 6/10/93
  * $FreeBSD: release/9.1.0/sys/netinet/tcp_timer.h 232945 2012-03-13 20:37:57Z glebius $
  */
 
@@ -65,7 +65,7 @@
  * is established, if the connection is idle for TCPTV_KEEP_IDLE time
  * (and keepalives have been enabled on the socket), we begin to probe
  * the connection.  We force the peer to send us a segment by sending:
- *	<SEQ=SND.UNA-1><ACK=RCV.NXT><CTL=ACK>
+ *    <SEQ=SND.UNA-1><ACK=RCV.NXT><CTL=ACK>
  * This segment is (deliberately) outside the window, and should elicit
  * an ack segment in response from the peer.  If, despite the TCPT_KEEP
  * initiated segments we cannot elicit a response from a peer in TCPT_MAXIDLE
@@ -78,21 +78,21 @@
  * Time constants.
  */
 
-#define	TCPTV_MSL	( 30*hz)		/* max seg lifetime (hah!) */
-#define	TCPTV_SRTTBASE	0			/* base roundtrip time;
-						   if 0, no idea yet */
-#define	TCPTV_RTOBASE	(  3*hz)		/* assumed RTO if no info */
-#define	TCPTV_SRTTDFLT	(  3*hz)		/* assumed RTT if no info */
+#define    TCPTV_MSL    ( 30*hz)        /* max seg lifetime (hah!) */
+#define    TCPTV_SRTTBASE    0            /* base roundtrip time;
+                           if 0, no idea yet */
+#define    TCPTV_RTOBASE    (  3*hz)        /* assumed RTO if no info */
+#define    TCPTV_SRTTDFLT    (  3*hz)        /* assumed RTT if no info */
 
-#define	TCPTV_PERSMIN	(  5*hz)		/* retransmit persistence */
-#define	TCPTV_PERSMAX	( 60*hz)		/* maximum persist interval */
+#define    TCPTV_PERSMIN    (  5*hz)        /* retransmit persistence */
+#define    TCPTV_PERSMAX    ( 60*hz)        /* maximum persist interval */
 
-#define	TCPTV_KEEP_INIT	( 75*hz)		/* initial connect keepalive */
-#define	TCPTV_KEEP_IDLE	(120L*60L*hz)		/* dflt time before probing */
-#define	TCPTV_KEEPINTVL	( 75*hz)		/* default probe interval */
-#define	TCPTV_KEEPCNT	8			/* max probes before drop */
+#define    TCPTV_KEEP_INIT    ( 75*hz)        /* initial connect keepalive */
+#define    TCPTV_KEEP_IDLE    (120L*60L*hz)        /* dflt time before probing */
+#define    TCPTV_KEEPINTVL    ( 75*hz)        /* default probe interval */
+#define    TCPTV_KEEPCNT    8            /* max probes before drop */
 
-#define TCPTV_REASSDL	(  5*hz)		/* initial passive reassembly deadline */
+#define TCPTV_REASSDL    (  5*hz)        /* initial passive reassembly deadline */
 
 #define TCPTV_FINWAIT2_TIMEOUT (60*hz)         /* FIN_WAIT_2 timeout if no receiver */
 
@@ -116,19 +116,19 @@
  * The prior minimum of 1*hz (1 second) badly breaks throughput on any
  * networks faster then a modem that has minor (e.g. 1%) packet loss.
  */
-#define	TCPTV_MIN	( hz/33 )		/* minimum allowable value */
-#define TCPTV_CPU_VAR	( hz/5 )		/* cpu variance allowed (200ms) */
-#define	TCPTV_REXMTMAX	( 64*hz)		/* max allowable REXMT value */
+#define    TCPTV_MIN    ( hz/33 )        /* minimum allowable value */
+#define TCPTV_CPU_VAR    ( hz/5 )        /* cpu variance allowed (200ms) */
+#define    TCPTV_REXMTMAX    ( 64*hz)        /* max allowable REXMT value */
 
-#define TCPTV_TWTRUNC	8			/* RTO factor to truncate TW */
+#define TCPTV_TWTRUNC    8            /* RTO factor to truncate TW */
 
-#define	TCP_LINGERTIME	120			/* linger at most 2 minutes */
+#define    TCP_LINGERTIME    120            /* linger at most 2 minutes */
 
-#define	TCP_MAXRXTSHIFT	12			/* maximum retransmits */
+#define    TCP_MAXRXTSHIFT    12            /* maximum retransmits */
 
-#define	TCPTV_DELACK	(hz / PR_FASTHZ / 2)	/* 100ms timeout */
+#define    TCPTV_DELACK    (hz / PR_FASTHZ / 2)    /* 100ms timeout */
 
-#ifdef	TCPTIMERS
+#ifdef    TCPTIMERS
 static const char *tcptimers[] =
     { "REXMT", "PERSIST", "KEEP", "2MSL" };
 #endif
@@ -136,59 +136,59 @@ static const char *tcptimers[] =
 /*
  * Force a time value to be in a certain range.
  */
-#define	TCPT_RANGESET(tv, value, tvmin, tvmax) do { \
-	(tv) = (value) + ofp_tcp_rexmit_slop; \
-	if ((uint64_t)(tv) < (uint64_t)(tvmin)) \
-		(tv) = (tvmin); \
-	if ((uint64_t)(tv) > (uint64_t)(tvmax)) \
-		(tv) = (tvmax); \
+#define    TCPT_RANGESET(tv, value, tvmin, tvmax) do { \
+    (tv) = (value) + ofp_tcp_rexmit_slop; \
+    if ((uint64_t)(tv) < (uint64_t)(tvmin)) \
+        (tv) = (tvmin); \
+    if ((uint64_t)(tv) > (uint64_t)(tvmax)) \
+        (tv) = (tvmax); \
 } while(0)
 
 struct xtcp_timer;
 
 struct tcp_timer {
-	struct	callout tt_rexmt;	/* retransmit timer */
-	struct	callout tt_persist;	/* retransmit persistence */
-	struct	callout tt_keep;	/* keepalive */
-	struct	callout tt_2msl;	/* 2*msl TIME_WAIT timer */
-	struct	callout tt_delack;	/* delayed ACK timer */
+    struct    callout tt_rexmt;    /* retransmit timer */
+    struct    callout tt_persist;    /* retransmit persistence */
+    struct    callout tt_keep;    /* keepalive */
+    struct    callout tt_2msl;    /* 2*msl TIME_WAIT timer */
+    struct    callout tt_delack;    /* delayed ACK timer */
 };
-#define TT_DELACK	0x01
-#define TT_REXMT	0x02
-#define TT_PERSIST	0x04
-#define TT_KEEP		0x08
-#define TT_2MSL		0x10
+#define TT_DELACK    0x01
+#define TT_REXMT    0x02
+#define TT_PERSIST    0x04
+#define TT_KEEP        0x08
+#define TT_2MSL        0x10
 
-#define	TP_KEEPINIT(tp)	((tp)->t_keepinit ? (int)(tp)->t_keepinit : ofp_tcp_keepinit)
-#define	TP_KEEPIDLE(tp)	((tp)->t_keepidle ? (int)(tp)->t_keepidle : ofp_tcp_keepidle)
-#define	TP_KEEPINTVL(tp) ((tp)->t_keepintvl ? (int)(tp)->t_keepintvl : ofp_tcp_keepintvl)
-#define	TP_KEEPCNT(tp)	((tp)->t_keepcnt ? (int)(tp)->t_keepcnt : ofp_tcp_keepcnt)
-#define	TP_MAXIDLE(tp)	(TP_KEEPCNT(tp) * TP_KEEPINTVL(tp))
+#define    TP_KEEPINIT(tp)    ((tp)->t_keepinit ? (int)(tp)->t_keepinit : ofp_tcp_keepinit)
+#define    TP_KEEPIDLE(tp)    ((tp)->t_keepidle ? (int)(tp)->t_keepidle : ofp_tcp_keepidle)
+#define    TP_KEEPINTVL(tp) ((tp)->t_keepintvl ? (int)(tp)->t_keepintvl : ofp_tcp_keepintvl)
+#define    TP_KEEPCNT(tp)    ((tp)->t_keepcnt ? (int)(tp)->t_keepcnt : ofp_tcp_keepcnt)
+#define    TP_MAXIDLE(tp)    (TP_KEEPCNT(tp) * TP_KEEPINTVL(tp))
 
-extern int ofp_tcp_keepinit;		/* time to establish connection */
-extern int ofp_tcp_keepidle;		/* time before keepalive probes begin */
-extern int ofp_tcp_keepintvl;		/* time between keepalive probes */
-extern int ofp_tcp_keepcnt;			/* number of keepalives */
-extern int ofp_tcp_delacktime;		/* time before sending a delayed ACK */
+extern int ofp_tcp_keepinit;        /* time to establish connection */
+extern int ofp_tcp_keepidle;        /* time before keepalive probes begin */
+extern int ofp_tcp_keepintvl;        /* time between keepalive probes */
+extern int ofp_tcp_keepcnt;            /* number of keepalives */
+extern int ofp_tcp_delacktime;        /* time before sending a delayed ACK */
 extern int ofp_tcp_maxpersistidle;
 extern int ofp_tcp_rexmit_min;
 extern int ofp_tcp_rexmit_slop;
 extern int ofp_tcp_msl;
-extern int tcp_ttl;			/* time to live for TCP segs */
+extern int tcp_ttl;            /* time to live for TCP segs */
 extern int ofp_tcp_backoff[];
 
 extern int ofp_tcp_finwait2_timeout;
 extern int ofp_tcp_fast_finwait2_recycle;
 
-void	tcp_timer_init(void);
-void	ofp_tcp_timer_2msl(void *xtp);
+void    tcp_timer_init(void);
+void    ofp_tcp_timer_2msl(void *xtp);
 struct tcptw *
-	ofp_tcp_tw_2msl_scan(int _reuse);		/* XXX temporary */
-void	ofp_tcp_timer_keep(void *xtp);
-void	ofp_tcp_timer_persist(void *xtp);
-void	ofp_tcp_timer_rexmt(void *xtp);
-void	ofp_tcp_timer_delack(void *xtp);
-void	tcp_timer_to_xtimer(struct tcpcb *tp, struct tcp_timer *timer,
-	struct xtcp_timer *xtimer);
+    ofp_tcp_tw_2msl_scan(int _reuse);        /* XXX temporary */
+void    ofp_tcp_timer_keep(void *xtp);
+void    ofp_tcp_timer_persist(void *xtp);
+void    ofp_tcp_timer_rexmt(void *xtp);
+void    ofp_tcp_timer_delack(void *xtp);
+void    tcp_timer_to_xtimer(struct tcpcb *tp, struct tcp_timer *timer,
+    struct xtcp_timer *xtimer);
 
 #endif /* !_NETINET_TCP_TIMER_H_ */

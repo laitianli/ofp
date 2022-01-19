@@ -18,15 +18,15 @@
 /** cli_conn: CLI connection context
  */
 struct cli_conn {
-	int           status;
-	int           fd;
-	char          inbuf[200];
-	char          oldbuf[NUM_OLD_BUFS][200];
-	int           old_put_cnt;
-	int           old_get_cnt;
-	unsigned int  pos;
-	unsigned char ch1;
-	char          passwd[PASSWORD_LEN + 1];
+    int           status;
+    int           fd;
+    char          inbuf[200];
+    char          oldbuf[NUM_OLD_BUFS][200];
+    int           old_put_cnt;
+    int           old_get_cnt;
+    unsigned int  pos;
+    unsigned char ch1;
+    char          passwd[PASSWORD_LEN + 1];
 };
 
 /** utils
@@ -68,8 +68,8 @@ void f_help_arp(struct cli_conn *conn, const char *s);
 #define ALIAS_TABLE_LEN 16
 
 struct alias_table_s {
-	char *name;
-	char *cmd;
+    char *name;
+    char *cmd;
 };
 
 extern struct alias_table_s alias_table[];

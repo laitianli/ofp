@@ -15,8 +15,8 @@ struct thread;
 struct ofp_ucred;
 
 int ofp_soo_ioctl(struct socket *so, uint32_t cmd, void *data,
-	      struct ofp_ucred *active_cred, struct thread *td);
+          struct ofp_ucred *active_cred, struct thread *td);
 int ofp_in_control(struct socket *so, uint32_t cmd, char * data, struct ofp_ifnet *ifp,
-	       struct thread *td);
+           struct thread *td);
 
 #endif

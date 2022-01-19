@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1982, 1986, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *    The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,12 +26,12 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)ip_var.h	8.2 (Berkeley) 1/9/95
+ *    @(#)ip_var.h    8.2 (Berkeley) 1/9/95
  * $FreeBSD: release/9.1.0/sys/netinet/ip_var.h 223666 2011-06-29 10:06:58Z ae $
  */
 
 #ifndef _OFP_IP_VAR_H_
-#define	_OFP_IP_VAR_H_
+#define    _OFP_IP_VAR_H_
 
 #include <stdint.h>
 #include "ofp_in.h"
@@ -44,11 +44,11 @@
  * Overlay for ip header used by other protocols (tcp, udp).
  */
 struct ipovly {
-	uint8_t	ih_x1[9];		/* (unused) */
-	uint8_t	ih_pr;			/* protocol */
-	uint16_t	ih_len;			/* protocol length */
-	struct ofp_in_addr ih_src;		/* source internet address */
-	struct ofp_in_addr ih_dst;		/* destination internet address */
+    uint8_t    ih_x1[9];        /* (unused) */
+    uint8_t    ih_pr;            /* protocol */
+    uint16_t    ih_len;            /* protocol length */
+    struct ofp_in_addr ih_src;        /* source internet address */
+    struct ofp_in_addr ih_dst;        /* destination internet address */
 };
 
 
@@ -58,11 +58,11 @@ struct ipovly {
  * The actual length of the options (including ipopt_dst)
  * is in m_len.
  */
-#define MAX_IPOPTLEN	40
+#define MAX_IPOPTLEN    40
 
 struct ofp_ipoption {
-	struct ofp_in_addr ipopt_dst;	/* first-hop dst if source routed */
-	char	ipopt_list[MAX_IPOPTLEN];	/* options proper */
+    struct ofp_in_addr ipopt_dst;    /* first-hop dst if source routed */
+    char    ipopt_list[MAX_IPOPTLEN];    /* options proper */
 };
 
 /*
@@ -72,50 +72,50 @@ struct ofp_ipoption {
  */
 struct ofp_ifnet;
 struct ofp_ip_moptions {
-	struct ofp_ifnet *imo_multicast_ifp; /* ifp for outgoing multicasts */
-	struct ofp_in_addr imo_multicast_addr; /* ifindex/addr on MULTICAST_IF */
-	int64_t	imo_multicast_vif;	/* vif num outgoing multicasts */
-	uint8_t	imo_multicast_ttl;	/* TTL for outgoing multicasts */
-	uint8_t	imo_multicast_loop;	/* 1 => hear sends if a member */
-	uint16_t	imo_num_memberships;	/* no. memberships this socket */
-	uint16_t	imo_max_memberships;	/* max memberships this socket */
-	struct ofp_in_multi **imo_membership;	/* group memberships */
-	struct ofp_in_mfilter *imo_mfilters;	/* source filters */
+    struct ofp_ifnet *imo_multicast_ifp; /* ifp for outgoing multicasts */
+    struct ofp_in_addr imo_multicast_addr; /* ifindex/addr on MULTICAST_IF */
+    int64_t    imo_multicast_vif;    /* vif num outgoing multicasts */
+    uint8_t    imo_multicast_ttl;    /* TTL for outgoing multicasts */
+    uint8_t    imo_multicast_loop;    /* 1 => hear sends if a member */
+    uint16_t    imo_num_memberships;    /* no. memberships this socket */
+    uint16_t    imo_max_memberships;    /* max memberships this socket */
+    struct ofp_in_multi **imo_membership;    /* group memberships */
+    struct ofp_in_mfilter *imo_mfilters;    /* source filters */
 };
 
-struct	ofp_ipstat {
-	uint64_t	ips_total;		/* total packets received */
-	uint64_t	ips_badsum;		/* checksum bad */
-	uint64_t	ips_tooshort;		/* packet too short */
-	uint64_t	ips_toosmall;		/* not enough data */
-	uint64_t	ips_badhlen;		/* ip header length < data size */
-	uint64_t	ips_badlen;		/* ip length < ip header length */
-	uint64_t	ips_fragments;		/* fragments received */
-	uint64_t	ips_fragdropped;	/* frags dropped (dups, out of space) */
-	uint64_t	ips_fragtimeout;	/* fragments timed out */
-	uint64_t	ips_forward;		/* packets forwarded */
-	uint64_t	ips_fastforward;	/* packets fast forwarded */
-	uint64_t	ips_cantforward;	/* packets rcvd for unreachable dest */
-	uint64_t	ips_redirectsent;	/* packets forwarded on same net */
-	uint64_t	ips_noproto;		/* unknown or unsupported protocol */
-	uint64_t	ips_delivered;		/* datagrams delivered to upper level*/
-	uint64_t	ips_localout;		/* total ip packets generated here */
-	uint64_t	ips_odropped;		/* lost packets due to nobufs, etc. */
-	uint64_t	ips_reassembled;	/* total packets reassembled ok */
-	uint64_t	ips_fragmented;		/* datagrams successfully fragmented */
-	uint64_t	ips_ofragments;		/* output fragments created */
-	uint64_t	ips_cantfrag;		/* don't fragment flag was set, etc. */
-	uint64_t	ips_badoptions;		/* error in option processing */
-	uint64_t	ips_noroute;		/* packets discarded due to no route */
-	uint64_t	ips_badvers;		/* ip version != 4 */
-	uint64_t	ips_rawout;		/* total raw ip packets generated */
-	uint64_t	ips_toolong;		/* ip length > max ip packet size */
-	uint64_t	ips_notmember;		/* multicasts for unregistered grps */
-	uint64_t	ips_nogif;		/* no match gif found */
-	uint64_t	ips_badaddr;		/* invalid address on header */
+struct    ofp_ipstat {
+    uint64_t    ips_total;        /* total packets received */
+    uint64_t    ips_badsum;        /* checksum bad */
+    uint64_t    ips_tooshort;        /* packet too short */
+    uint64_t    ips_toosmall;        /* not enough data */
+    uint64_t    ips_badhlen;        /* ip header length < data size */
+    uint64_t    ips_badlen;        /* ip length < ip header length */
+    uint64_t    ips_fragments;        /* fragments received */
+    uint64_t    ips_fragdropped;    /* frags dropped (dups, out of space) */
+    uint64_t    ips_fragtimeout;    /* fragments timed out */
+    uint64_t    ips_forward;        /* packets forwarded */
+    uint64_t    ips_fastforward;    /* packets fast forwarded */
+    uint64_t    ips_cantforward;    /* packets rcvd for unreachable dest */
+    uint64_t    ips_redirectsent;    /* packets forwarded on same net */
+    uint64_t    ips_noproto;        /* unknown or unsupported protocol */
+    uint64_t    ips_delivered;        /* datagrams delivered to upper level*/
+    uint64_t    ips_localout;        /* total ip packets generated here */
+    uint64_t    ips_odropped;        /* lost packets due to nobufs, etc. */
+    uint64_t    ips_reassembled;    /* total packets reassembled ok */
+    uint64_t    ips_fragmented;        /* datagrams successfully fragmented */
+    uint64_t    ips_ofragments;        /* output fragments created */
+    uint64_t    ips_cantfrag;        /* don't fragment flag was set, etc. */
+    uint64_t    ips_badoptions;        /* error in option processing */
+    uint64_t    ips_noroute;        /* packets discarded due to no route */
+    uint64_t    ips_badvers;        /* ip version != 4 */
+    uint64_t    ips_rawout;        /* total raw ip packets generated */
+    uint64_t    ips_toolong;        /* ip length > max ip packet size */
+    uint64_t    ips_notmember;        /* multicasts for unregistered grps */
+    uint64_t    ips_nogif;        /* no match gif found */
+    uint64_t    ips_badaddr;        /* invalid address on header */
 };
 
-extern struct socket *ofp_ip_mrouter;	/* multicast routing daemon */
+extern struct socket *ofp_ip_mrouter;    /* multicast routing daemon */
 
 #if __GNUC__ >= 4
 #pragma GCC visibility pop

@@ -26,12 +26,12 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$KAME: ip6protosw.h,v 1.25 2001/09/26 06:13:03 keiichi Exp $
+ *    $KAME: ip6protosw.h,v 1.25 2001/09/26 06:13:03 keiichi Exp $
  */
 
 /*-
  * Copyright (c) 1982, 1986, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *    The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -57,8 +57,8 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)protosw.h	8.1 (Berkeley) 6/2/93
- *	BSDI protosw.h,v 2.3 1996/10/11 16:02:40 pjd Exp
+ *    @(#)protosw.h    8.1 (Berkeley) 6/2/93
+ *    BSDI protosw.h,v 2.3 1996/10/11 16:02:40 pjd Exp
  * $FreeBSD: release/9.1.0/sys/netinet6/ip6protosw.h 193731 2009-06-08 17:15:40Z zec $
  */
 
@@ -98,51 +98,51 @@ struct pr_usrreqs;
  * dstination address in the routing header.
  *
  * ip6c_src: ip6c_ip6->ip6_src + scope info + flowlabel in ip6c_ip6
- *	(beware of flowlabel, if you try to compare it against others)
+ *    (beware of flowlabel, if you try to compare it against others)
  * ip6c_dst: ip6c_finaldst + scope info
  */
 
 struct ofp_ip6ctlparam {
-	odp_packet_t ip6c_m;		/* start of odp packet chain */
-	struct ofp_icmp6_hdr *ip6c_icmp6;	/* icmp6 header of target packet */
-	struct ofp_ip6_hdr *ip6c_ip6;	/* ip6 header of target packet */
-	int ip6c_off;			/* offset of the target proto header */
-	struct ofp_sockaddr_in6 *ip6c_src;	/* srcaddr w/ additional info */
-	struct ofp_sockaddr_in6 *ip6c_dst;	/* (final) dstaddr w/ additional info */
-	struct ofp_in6_addr *ip6c_finaldst;	/* final destination address */
-	void *ip6c_cmdarg;		/* control command dependent data */
-	uint8_t ip6c_nxt;		/* final next header field */
+    odp_packet_t ip6c_m;        /* start of odp packet chain */
+    struct ofp_icmp6_hdr *ip6c_icmp6;    /* icmp6 header of target packet */
+    struct ofp_ip6_hdr *ip6c_ip6;    /* ip6 header of target packet */
+    int ip6c_off;            /* offset of the target proto header */
+    struct ofp_sockaddr_in6 *ip6c_src;    /* srcaddr w/ additional info */
+    struct ofp_sockaddr_in6 *ip6c_dst;    /* (final) dstaddr w/ additional info */
+    struct ofp_in6_addr *ip6c_finaldst;    /* final destination address */
+    void *ip6c_cmdarg;        /* control command dependent data */
+    uint8_t ip6c_nxt;        /* final next header field */
 };
 
 struct ip6protosw {
-	short	pr_type;		/* socket type used for */
-	struct	domain *pr_domain;	/* domain protocol a member of */
-	short	pr_protocol;		/* protocol number */
-	short	pr_flags;		/* see below */
+    short    pr_type;        /* socket type used for */
+    struct    domain *pr_domain;    /* domain protocol a member of */
+    short    pr_protocol;        /* protocol number */
+    short    pr_flags;        /* see below */
 
 /* protocol-protocol hooks */
-	enum ofp_return_code (*pr_input)	/* input to protocol (from below) */
-			__P((odp_packet_t *, int *, int *));
-	int	(*pr_output)		/* output to protocol (from above) */
-			__P((odp_packet_t, ...));
-	void	(*pr_ctlinput)		/* control input (from below) */
-			__P((int, struct ofp_sockaddr *, void *));
-	int	(*pr_ctloutput)		/* control output (from above) */
-			__P((struct socket *, struct sockopt *));
+    enum ofp_return_code (*pr_input)    /* input to protocol (from below) */
+            __P((odp_packet_t *, int *, int *));
+    int    (*pr_output)        /* output to protocol (from above) */
+            __P((odp_packet_t, ...));
+    void    (*pr_ctlinput)        /* control input (from below) */
+            __P((int, struct ofp_sockaddr *, void *));
+    int    (*pr_ctloutput)        /* control output (from above) */
+            __P((struct socket *, struct sockopt *));
 
 /* utility hooks */
-	void	(*pr_init)		/* initialization hook */
-			__P((void));
-	void	(*pr_destroy)		/* cleanup hook */
-			__P((void));
+    void    (*pr_init)        /* initialization hook */
+            __P((void));
+    void    (*pr_destroy)        /* cleanup hook */
+            __P((void));
 
-	void	(*pr_fasttimo)		/* fast timeout (200ms) */
-			__P((void));
-	void	(*pr_slowtimo)		/* slow timeout (500ms) */
-			__P((void));
-	void	(*pr_drain)		/* flush any excess space possible */
-			__P((void));
-	struct	pr_usrreqs *pr_usrreqs;	/* supersedes pr_usrreq() */
+    void    (*pr_fasttimo)        /* fast timeout (200ms) */
+            __P((void));
+    void    (*pr_slowtimo)        /* slow timeout (500ms) */
+            __P((void));
+    void    (*pr_drain)        /* flush any excess space possible */
+            __P((void));
+    struct    pr_usrreqs *pr_usrreqs;    /* supersedes pr_usrreq() */
 };
 
 extern struct ip6protosw ofp_inet6sw[];

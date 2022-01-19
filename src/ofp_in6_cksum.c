@@ -26,12 +26,12 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$KAME: in6_cksum.c,v 1.10 2000/12/03 00:53:59 itojun Exp $
+ *    $KAME: in6_cksum.c,v 1.10 2000/12/03 00:53:59 itojun Exp $
  */
 
 /*-
  * Copyright (c) 1988, 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *    The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -57,7 +57,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)in_cksum.c	8.1 (Berkeley) 6/10/93
+ *    @(#)in_cksum.c    8.1 (Berkeley) 6/10/93
  */
 
 
@@ -76,88 +76,88 @@
 
 #define ADDCARRY(x)  (x > 65535 ? x -= 65535 : x)
 #define REDUCE do { \
-	l_util.l = sum; sum = l_util.s[0] + l_util.s[1]; (void)ADDCARRY(sum); \
+    l_util.l = sum; sum = l_util.s[0] + l_util.s[1]; (void)ADDCARRY(sum); \
 } while (0)
 
 static int
 _ofp_in6_cksum_pseudo(struct ofp_ip6_hdr *ip6, uint32_t len,
-		uint8_t nxt, uint16_t csum)
+        uint8_t nxt, uint16_t csum)
 {
-	int sum;
-	uint16_t scope = 0, *w;
+    int sum;
+    uint16_t scope = 0, *w;
 
-	union {
-		uint16_t phs[4];
-		struct __attribute__ ((__packed__)) {
-			uint32_t	ph_len;
-			uint8_t	ph_zero[3];
-			uint8_t	ph_nxt;
-		} ph;
-	} uph;
+    union {
+        uint16_t phs[4];
+        struct __attribute__ ((__packed__)) {
+            uint32_t    ph_len;
+            uint8_t    ph_zero[3];
+            uint8_t    ph_nxt;
+        } ph;
+    } uph;
 
-	sum = csum;
+    sum = csum;
 
-	/*
-	 * First create IP6 pseudo header and calculate a summary.
-	 */
-	uph.ph.ph_len = odp_cpu_to_be_32(len);
-	uph.ph.ph_zero[0] = uph.ph.ph_zero[1] = uph.ph.ph_zero[2] = 0;
-	uph.ph.ph_nxt = nxt;
+    /*
+     * First create IP6 pseudo header and calculate a summary.
+     */
+    uph.ph.ph_len = odp_cpu_to_be_32(len);
+    uph.ph.ph_zero[0] = uph.ph.ph_zero[1] = uph.ph.ph_zero[2] = 0;
+    uph.ph.ph_nxt = nxt;
 
-	/* Payload length and upper layer identifier. */
-	sum += uph.phs[0];  sum += uph.phs[1];
-	sum += uph.phs[2];  sum += uph.phs[3];
+    /* Payload length and upper layer identifier. */
+    sum += uph.phs[0];  sum += uph.phs[1];
+    sum += uph.phs[2];  sum += uph.phs[3];
 
-	/* IPv6 source address. */
-	scope = ofp_in6_getscope(&ip6->ip6_src);
-	w = (uint16_t *)&ip6->ip6_src;
-	sum += w[0]; sum += w[1]; sum += w[2]; sum += w[3];
-	sum += w[4]; sum += w[5]; sum += w[6]; sum += w[7];
-	if (scope != 0)
-		sum -= scope;
+    /* IPv6 source address. */
+    scope = ofp_in6_getscope(&ip6->ip6_src);
+    w = (uint16_t *)&ip6->ip6_src;
+    sum += w[0]; sum += w[1]; sum += w[2]; sum += w[3];
+    sum += w[4]; sum += w[5]; sum += w[6]; sum += w[7];
+    if (scope != 0)
+        sum -= scope;
 
-	/* IPv6 destination address. */
-	scope = ofp_in6_getscope(&ip6->ip6_dst);
-	w = (uint16_t *)&ip6->ip6_dst;
-	sum += w[0]; sum += w[1]; sum += w[2]; sum += w[3];
-	sum += w[4]; sum += w[5]; sum += w[6]; sum += w[7];
-	if (scope != 0)
-		sum -= scope;
+    /* IPv6 destination address. */
+    scope = ofp_in6_getscope(&ip6->ip6_dst);
+    w = (uint16_t *)&ip6->ip6_dst;
+    sum += w[0]; sum += w[1]; sum += w[2]; sum += w[3];
+    sum += w[4]; sum += w[5]; sum += w[6]; sum += w[7];
+    if (scope != 0)
+        sum -= scope;
 
-	return sum;
+    return sum;
 }
 
 int ofp_in6_cksum_pseudo(struct ofp_ip6_hdr *ip6,
-		uint32_t len, uint8_t nxt, uint16_t csum)
+        uint32_t len, uint8_t nxt, uint16_t csum)
 {
-	int sum;
-	union {
-		uint16_t s[2];
-		uint32_t l;
-	} l_util;
+    int sum;
+    union {
+        uint16_t s[2];
+        uint32_t l;
+    } l_util;
 
-	sum = _ofp_in6_cksum_pseudo(ip6, len, nxt, csum);
-	REDUCE;
-	return sum;
+    sum = _ofp_in6_cksum_pseudo(ip6, len, nxt, csum);
+    REDUCE;
+    return sum;
 }
 int ofp_in6_cksum(odp_packet_t m, uint8_t nxt, uint32_t off, uint32_t len)
 {
-	int sum;
-	uint16_t tmp;
-	union {
-		uint16_t s[2];
-		uint32_t l;
-	} l_util;
-	struct ofp_ip6_hdr *ip6 = odp_packet_l3_ptr(m, NULL);
+    int sum;
+    uint16_t tmp;
+    union {
+        uint16_t s[2];
+        uint32_t l;
+    } l_util;
+    struct ofp_ip6_hdr *ip6 = odp_packet_l3_ptr(m, NULL);
 
 /*Pseudo header*/
-	sum  = _ofp_in6_cksum_pseudo(ip6, len, nxt, 0);
+    sum  = _ofp_in6_cksum_pseudo(ip6, len, nxt, 0);
 
 /* Payload*/
-	tmp = ~ofp_cksum(m, odp_packet_l3_offset(m) +
-			off, len);
-	sum += tmp;
+    tmp = ~ofp_cksum(m, odp_packet_l3_offset(m) +
+            off, len);
+    sum += tmp;
 
-	REDUCE;
-	return (~sum & 0xffff);
+    REDUCE;
+    return (~sum & 0xffff);
 }

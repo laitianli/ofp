@@ -74,7 +74,7 @@ ofp_ipsec_sa_handle *ofp_ipsec_sp_get_sa_area(struct ofp_ipsec_sp *sp);
  * the associated SA or OFP_IPSEC_SA_INVALID.
  */
 ofp_ipsec_action_t ofp_ipsec_sp_out_lookup(uint16_t vrf, odp_packet_t pkt,
-					   ofp_ipsec_sa_handle *sa);
+                       ofp_ipsec_sa_handle *sa);
 
 /*
  * Lookup the inbound policy matching to a given packet.

@@ -15,8 +15,8 @@ struct ofp_ipsec_global_param;
 
 void ofp_ipsec_sad_init_prepare(uint32_t max_num_sa);
 int ofp_ipsec_sad_init_global(uint32_t max_num_sa,
-			      odp_queue_t inbound_queue,
-			      odp_queue_t outbound_queue);
+                  odp_queue_t inbound_queue,
+                  odp_queue_t outbound_queue);
 int ofp_ipsec_sad_init_local(void);
 int ofp_ipsec_sad_term_global(void);
 
@@ -72,7 +72,7 @@ const ofp_ipsec_sa_param_t *ofp_ipsec_sa_get_param(struct ofp_ipsec_sa *sa);
  * Set selectors in an SA. Return 0 on success.
  */
 int ofp_ipsec_sa_set_selectors(struct ofp_ipsec_sa *sa,
-			       const ofp_ipsec_selectors_t *sel);
+                   const ofp_ipsec_selectors_t *sel);
 
 /*
  * Get selectors associated with an SA.

@@ -7,7 +7,7 @@
 
 /*-
  * Copyright (c) 1986, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *    The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -33,12 +33,12 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)if_arp.h	8.1 (Berkeley) 6/10/93
+ *    @(#)if_arp.h    8.1 (Berkeley) 6/10/93
  * $FreeBSD: release/9.1.0/sys/net/if_arp.h 219819 2011-03-21 09:40:01Z jeff $
  */
 
 #ifndef _OFPI_IF_ARP_H_
-#define	_OFPI_IF_ARP_H_
+#define    _OFPI_IF_ARP_H_
 
 /*
  * Address Resolution Protocol.
@@ -50,29 +50,29 @@
  * arp_tha and arp_tpa in that order, according to the lengths
  * specified.  Field names used correspond to RFC 826.
  */
-struct	ofp_arphdr {
-	uint16_t hrd;			/* format of hardware address */
-#define OFP_ARPHDR_ETHER	1	/* ethernet hardware format */
-#define OFP_ARPHDR_IEEE802	6	/* token-ring hardware format */
-#define OFP_ARPHDR_ARCNET	7	/* arcnet hardware format */
-#define OFP_ARPHDR_FRELAY	15	/* frame relay hardware format */
-#define OFP_ARPHDR_IEEE1394	24	/* firewire hardware format */
-#define OFP_ARPHDR_INFINIBAND 32	/* infiniband hardware format */
-	uint16_t pro;			/* format of protocol address */
-	uint8_t  hln;			/* length of hardware address */
-	uint8_t  pln;			/* length of protocol address */
-	uint16_t op;			/* one of: */
-#define	OFP_ARPOP_REQUEST	1	/* request to resolve address */
-#define	OFP_ARPOP_REPLY	2	/* response to previous request */
-#define	OFP_ARPOP_REVREQUEST	3	/* request protocol address given hardware */
-#define	OFP_ARPOP_REVREPLY	4	/* response giving protocol address */
-#define OFP_ARPOP_INVREQUEST	8	/* request to identify peer */
-#define OFP_ARPOP_INVREPLY	9	/* response identifying peer */
-	uint8_t  eth_src[OFP_ETHER_ADDR_LEN];
-	uint32_t ip_src;
+struct    ofp_arphdr {
+    uint16_t hrd;            /* format of hardware address */
+#define OFP_ARPHDR_ETHER    1    /* ethernet hardware format */
+#define OFP_ARPHDR_IEEE802    6    /* token-ring hardware format */
+#define OFP_ARPHDR_ARCNET    7    /* arcnet hardware format */
+#define OFP_ARPHDR_FRELAY    15    /* frame relay hardware format */
+#define OFP_ARPHDR_IEEE1394    24    /* firewire hardware format */
+#define OFP_ARPHDR_INFINIBAND 32    /* infiniband hardware format */
+    uint16_t pro;            /* format of protocol address */
+    uint8_t  hln;            /* length of hardware address */
+    uint8_t  pln;            /* length of protocol address */
+    uint16_t op;            /* one of: */
+#define    OFP_ARPOP_REQUEST    1    /* request to resolve address */
+#define    OFP_ARPOP_REPLY    2    /* response to previous request */
+#define    OFP_ARPOP_REVREQUEST    3    /* request protocol address given hardware */
+#define    OFP_ARPOP_REVREPLY    4    /* response giving protocol address */
+#define OFP_ARPOP_INVREQUEST    8    /* request to identify peer */
+#define OFP_ARPOP_INVREPLY    9    /* response identifying peer */
+    uint8_t  eth_src[OFP_ETHER_ADDR_LEN];
+    uint32_t ip_src;
 
-	uint8_t  eth_dst[OFP_ETHER_ADDR_LEN];
-	uint32_t ip_dst;
+    uint8_t  eth_dst[OFP_ETHER_ADDR_LEN];
+    uint32_t ip_dst;
 } __attribute__((packed));
 
 #endif

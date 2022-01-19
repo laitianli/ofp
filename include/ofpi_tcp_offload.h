@@ -30,7 +30,7 @@
  */
 
 #ifndef _NETINET_TCP_OFFLOAD_H_
-#define	_NETINET_TCP_OFFLOAD_H_
+#define    _NETINET_TCP_OFFLOAD_H_
 
 /*
  * A driver publishes that it provides offload services
@@ -109,46 +109,46 @@
  *     pcbinfo lock during this call.
  *
  *   The following fields in the tcpcb are expected to be referenced by the driver:
- *	+ iss
- *	+ rcv_nxt
- *	+ rcv_wnd
- *	+ snd_isn
- *	+ snd_max
- *	+ snd_nxt
- *	+ snd_una
- *	+ t_flags
- *	+ t_inpcb
- *	+ t_maxseg
- *	+ t_toe
+ *    + iss
+ *    + rcv_nxt
+ *    + rcv_wnd
+ *    + snd_isn
+ *    + snd_max
+ *    + snd_nxt
+ *    + snd_una
+ *    + t_flags
+ *    + t_inpcb
+ *    + t_maxseg
+ *    + t_toe
  *
  *   The following fields in the inpcb are expected to be referenced by the driver:
- *	+ inp_lport
- *	+ inp_fport
- *	+ inp_laddr
- *	+ inp_fport
- *	+ inp_socket
- *	+ inp_ip_tos
+ *    + inp_lport
+ *    + inp_fport
+ *    + inp_laddr
+ *    + inp_fport
+ *    + inp_socket
+ *    + inp_ip_tos
  *
  *   The following fields in the socket are expected to be referenced by the
  *   driver:
- *	+ so_comp
- *	+ so_error
- *	+ so_linger
- *	+ so_options
- *	+ so_rcv
- *	+ so_snd
- *	+ so_state
- *	+ so_timeo
+ *    + so_comp
+ *    + so_error
+ *    + so_linger
+ *    + so_options
+ *    + so_rcv
+ *    + so_snd
+ *    + so_state
+ *    + so_timeo
  *
  *   These functions all return 0 on success and can return the following errors
  *   as appropriate:
- *	+ OFP_EPERM:
- *	+ OFP_ENOBUFS: memory allocation failed
- *	+ OFP_EMSGSIZE: MTU changed during the call
- *	+ OFP_EHOSTDOWN:
- *	+ OFP_EHOSTUNREACH:
- *	+ OFP_ENETDOWN:
- *	* OFP_ENETUNREACH: the peer is no longer reachable
+ *    + OFP_EPERM:
+ *    + OFP_ENOBUFS: memory allocation failed
+ *    + OFP_EMSGSIZE: MTU changed during the call
+ *    + OFP_EHOSTDOWN:
+ *    + OFP_EHOSTUNREACH:
+ *    + OFP_ENETDOWN:
+ *    * OFP_ENETUNREACH: the peer is no longer reachable
  *
  * + tu_detach
  *   - tells driver that the socket is going away so disconnect
@@ -177,29 +177,29 @@
 #define TCP_OFFLOAD_DISABLE 1
 
 struct toe_usrreqs {
-	int (*tu_send)(struct tcpcb *tp);
-	int (*tu_rcvd)(struct tcpcb *tp);
-	int (*tu_disconnect)(struct tcpcb *tp);
-	int (*tu_reset)(struct tcpcb *tp);
-	void (*tu_detach)(struct tcpcb *tp);
-	void (*tu_syncache_event)(int event, void *toep);
+    int (*tu_send)(struct tcpcb *tp);
+    int (*tu_rcvd)(struct tcpcb *tp);
+    int (*tu_disconnect)(struct tcpcb *tp);
+    int (*tu_reset)(struct tcpcb *tp);
+    void (*tu_detach)(struct tcpcb *tp);
+    void (*tu_syncache_event)(int event, void *toep);
 };
 
 /*
  * Proxy for struct tcpopt between TOE drivers and TCP functions.
  */
 struct toeopt {
-	uint64_t	to_flags;	/* see tcpopt in tcp_var.h */
-	uint16_t	to_mss;		/* maximum segment size */
-	uint8_t	to_wscale;	/* window scaling */
+    uint64_t    to_flags;    /* see tcpopt in tcp_var.h */
+    uint16_t    to_mss;        /* maximum segment size */
+    uint8_t    to_wscale;    /* window scaling */
 
-	uint8_t	_pad1;		/* explicit pad for 64bit alignment */
-	uint32_t	_pad2;		/* explicit pad for 64bit alignment */
-	uint64_t	_pad3[4];	/* TBD */
+    uint8_t    _pad1;        /* explicit pad for 64bit alignment */
+    uint32_t    _pad2;        /* explicit pad for 64bit alignment */
+    uint64_t    _pad3[4];    /* TBD */
 };
 
-#define	TOE_SC_ENTRY_PRESENT		1	/* 4-tuple already present */
-#define	TOE_SC_DROP			2	/* connection was timed out */
+#define    TOE_SC_ENTRY_PRESENT        1    /* 4-tuple already present */
+#define    TOE_SC_DROP            2    /* connection was timed out */
 
 /*
  * Because listen is a one-to-many relationship (a socket can be listening
@@ -215,8 +215,8 @@ struct toeopt {
  *
  */
 
-typedef	void	(*tcp_offload_listen_start_fn)(void *, struct tcpcb *);
-typedef	void	(*tcp_offload_listen_stop_fn)(void *, struct tcpcb *);
+typedef    void    (*tcp_offload_listen_start_fn)(void *, struct tcpcb *);
+typedef    void    (*tcp_offload_listen_stop_fn)(void *, struct tcpcb *);
 
 #if 0 /* HJo */
 EVENTHANDLER_DECLARE(tcp_offload_listen_start, tcp_offload_listen_start_fn);
@@ -229,7 +229,7 @@ EVENTHANDLER_DECLARE(tcp_offload_listen_stop, tcp_offload_listen_stop_fn);
  * - check the interface for TOE capability and TOE is enabled
  * - check if the device has resources to offload the connection
  */
-int	tcp_offload_connect(struct socket *so, struct ofp_sockaddr *nam);
+int    tcp_offload_connect(struct socket *so, struct ofp_sockaddr *nam);
 
 /*
  * The tcp_output_* routines are wrappers around the toe_usrreqs calls
@@ -244,7 +244,7 @@ int	tcp_offload_connect(struct socket *so, struct ofp_sockaddr *nam);
 /*
  * Connection is offloaded
  */
-#define	tp_offload(tp)		((tp)->t_flags & TF_TOE)
+#define    tp_offload(tp)        ((tp)->t_flags & TF_TOE)
 
 /*
  * hackish way of allowing this file to also be included by TOE
@@ -254,25 +254,25 @@ int	tcp_offload_connect(struct socket *so, struct ofp_sockaddr *nam);
 /*
  * The socket has not been marked as "do not offload"
  */
-#define	OFP_SO_OFFLOADABLE(so)	((so->so_options & OFP_SO_NO_OFFLOAD) == 0)
+#define    OFP_SO_OFFLOADABLE(so)    ((so->so_options & OFP_SO_NO_OFFLOAD) == 0)
 
 static __inline int
 tcp_output_connect(struct socket *so, struct ofp_sockaddr *nam)
 {
-	struct tcpcb *tp = sototcpcb(so);
-	int error;
-	(void)nam;
+    struct tcpcb *tp = sototcpcb(so);
+    int error;
+    (void)nam;
 
-	/*
-	 * If offload has been disabled for this socket or the
-	 * connection cannot be offloaded just call ofp_tcp_output
-	 * to start the TCP state machine.
-	 */
+    /*
+     * If offload has been disabled for this socket or the
+     * connection cannot be offloaded just call ofp_tcp_output
+     * to start the TCP state machine.
+     */
 #ifndef TCP_OFFLOAD_DISABLE
-	if (!OFP_SO_OFFLOADABLE(so) || (error = tcp_offload_connect(so, nam)) != 0)
+    if (!OFP_SO_OFFLOADABLE(so) || (error = tcp_offload_connect(so, nam)) != 0)
 #endif
-		error = ofp_tcp_output(tp);
-	return (error);
+        error = ofp_tcp_output(tp);
+    return (error);
 }
 
 static __inline int
@@ -280,10 +280,10 @@ tcp_output_send(struct tcpcb *tp)
 {
 
 #ifndef TCP_OFFLOAD_DISABLE
-	if (tp_offload(tp))
-		return (tp->t_tu->tu_send(tp));
+    if (tp_offload(tp))
+        return (tp->t_tu->tu_send(tp));
 #endif
-	return (ofp_tcp_output(tp));
+    return (ofp_tcp_output(tp));
 }
 
 static __inline int
@@ -291,10 +291,10 @@ tcp_output_rcvd(struct tcpcb *tp)
 {
 
 #ifndef TCP_OFFLOAD_DISABLE
-	if (tp_offload(tp))
-		return (tp->t_tu->tu_rcvd(tp));
+    if (tp_offload(tp))
+        return (tp->t_tu->tu_rcvd(tp));
 #endif
-	return (ofp_tcp_output(tp));
+    return (ofp_tcp_output(tp));
 }
 
 static __inline int
@@ -302,10 +302,10 @@ tcp_output_disconnect(struct tcpcb *tp)
 {
 
 #ifndef TCP_OFFLOAD_DISABLE
-	if (tp_offload(tp))
-		return (tp->t_tu->tu_disconnect(tp));
+    if (tp_offload(tp))
+        return (tp->t_tu->tu_disconnect(tp));
 #endif
-	return (ofp_tcp_output(tp));
+    return (ofp_tcp_output(tp));
 }
 
 static __inline int
@@ -313,40 +313,40 @@ tcp_output_reset(struct tcpcb *tp)
 {
 
 #ifndef TCP_OFFLOAD_DISABLE
-	if (tp_offload(tp))
-		return (tp->t_tu->tu_reset(tp));
+    if (tp_offload(tp))
+        return (tp->t_tu->tu_reset(tp));
 #endif
-	return (ofp_tcp_output(tp));
+    return (ofp_tcp_output(tp));
 }
 
 static __inline void
 tcp_offload_detach(struct tcpcb *tp)
 {
-	(void)tp;
+    (void)tp;
 #ifndef TCP_OFFLOAD_DISABLE
-	if (tp_offload(tp))
-		tp->t_tu->tu_detach(tp);
+    if (tp_offload(tp))
+        tp->t_tu->tu_detach(tp);
 #endif
 }
 
 static __inline void
 tcp_offload_listen_open(struct tcpcb *tp)
 {
-	(void)tp;
+    (void)tp;
 
 #ifndef TCP_OFFLOAD_DISABLE
-	if (OFP_SO_OFFLOADABLE(tp->t_inpcb->inp_socket))
-		EVENTHANDLER_INVOKE(tcp_offload_listen_start, tp);
+    if (OFP_SO_OFFLOADABLE(tp->t_inpcb->inp_socket))
+        EVENTHANDLER_INVOKE(tcp_offload_listen_start, tp);
 #endif
 }
 
 static __inline void
 tcp_offload_listen_close(struct tcpcb *tp)
 {
-	(void)tp;
+    (void)tp;
 
 #ifndef TCP_OFFLOAD_DISABLE
-	EVENTHANDLER_INVOKE(tcp_offload_listen_stop, tp);
+    EVENTHANDLER_INVOKE(tcp_offload_listen_stop, tp);
 #endif
 }
 #undef OFP_SO_OFFLOADABLE

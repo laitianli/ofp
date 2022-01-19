@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1989, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *    The Regents of the University of California.  All rights reserved.
  * Copyright (c) 2015, Nokia Solutions and Networks
  * Copyright (c) 2015, ENEA Software AB
  *
@@ -33,52 +33,52 @@
  */
 
 #ifndef _SYS_SYSCTL_H_
-#define	_SYS_SYSCTL_H_
+#define    _SYS_SYSCTL_H_
 
 #include "ofpi_queue.h"
 #include "api/ofp_sysctl.h"
 
 enum sysinit_sub_id {
-	SI_SUB_DUMMY		= 0x0000000,	/* not executed; for linker*/
-	SI_SUB_KMEM		= 0x1800000,	/* kernel memory*/
+    SI_SUB_DUMMY        = 0x0000000,    /* not executed; for linker*/
+    SI_SUB_KMEM        = 0x1800000,    /* kernel memory*/
 };
 
 enum sysinit_elem_order {
-	SI_ORDER_FIRST		= 0x0000000,	/* first*/
-	SI_ORDER_SECOND		= 0x0000001,	/* second*/
-	SI_ORDER_THIRD		= 0x0000002,	/* third*/
-	SI_ORDER_FOURTH		= 0x0000003,	/* fourth*/
-	SI_ORDER_MIDDLE		= 0x1000000,	/* somewhere in the middle */
-	SI_ORDER_ANY		= 0xfffffff	/* last*/
+    SI_ORDER_FIRST        = 0x0000000,    /* first*/
+    SI_ORDER_SECOND        = 0x0000001,    /* second*/
+    SI_ORDER_THIRD        = 0x0000002,    /* third*/
+    SI_ORDER_FOURTH        = 0x0000003,    /* fourth*/
+    SI_ORDER_MIDDLE        = 0x1000000,    /* somewhere in the middle */
+    SI_ORDER_ANY        = 0xfffffff    /* last*/
 };
 
 typedef void (*sysinit_nfunc_t)(void *);
 typedef void (*sysinit_cfunc_t)(const void *);
 
 struct sysinit {
-	enum sysinit_sub_id	subsystem;	/* subsystem identifier*/
-	enum sysinit_elem_order	order;		/* init order within subsystem*/
-	sysinit_cfunc_t func;			/* function		*/
-	const void	*udata;			/* multiplexer/argument */
+    enum sysinit_sub_id    subsystem;    /* subsystem identifier*/
+    enum sysinit_elem_order    order;        /* init order within subsystem*/
+    sysinit_cfunc_t func;            /* function        */
+    const void    *udata;            /* multiplexer/argument */
 };
 
 /* definitions for ofp_sysctl_req 'lock' member */
-#define	REQ_UNWIRED	1
-#define	REQ_WIRED	2
+#define    REQ_UNWIRED    1
+#define    REQ_WIRED    2
 
 /* definitions for ofp_sysctl_req 'flags' member */
 #if defined(__amd64__) || defined(__ia64__) || defined(__powerpc64__)
-#define	SCTL_MASK32	1	/* 32 bit emulation */
+#define    SCTL_MASK32    1    /* 32 bit emulation */
 #endif
 
 /* Dynamic oid handling */
-int	ofp_kernel_sysctl(struct thread *td, const int *name, unsigned int namelen, void *old,
-			    size_t *oldlenp, const void *new, size_t newlen,
-			    size_t *retval, int flags);
-int	ofp_sysctl_find_oid(const int *name, unsigned int namelen, struct ofp_sysctl_oid **noid,
-			      int *nindx, struct ofp_sysctl_req *req);
-void	ofp_register_sysctls(void);
-int	ofp_unregister_sysctls(void);
-void	ofp_sysctl_write_tree(int fd);
+int    ofp_kernel_sysctl(struct thread *td, const int *name, unsigned int namelen, void *old,
+                size_t *oldlenp, const void *new, size_t newlen,
+                size_t *retval, int flags);
+int    ofp_sysctl_find_oid(const int *name, unsigned int namelen, struct ofp_sysctl_oid **noid,
+                  int *nindx, struct ofp_sysctl_req *req);
+void    ofp_register_sysctls(void);
+int    ofp_unregister_sysctls(void);
+void    ofp_sysctl_write_tree(int fd);
 
-#endif	/* !_SYS_SYSCTL_H_ */
+#endif    /* !_SYS_SYSCTL_H_ */

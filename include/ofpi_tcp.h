@@ -6,7 +6,7 @@
 
 /*-
  * Copyright (c) 1982, 1986, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *    The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,7 +32,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)tcp.h	8.1 (Berkeley) 6/10/93
+ *    @(#)tcp.h    8.1 (Berkeley) 6/10/93
  * $FreeBSD: release/9.1.0/sys/netinet/tcp.h 232945 2012-03-13 20:37:57Z glebius $
  */
 

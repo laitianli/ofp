@@ -6,7 +6,7 @@
 
 /*-
  * Copyright (c) 1982, 1986, 1990, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *    The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,7 +32,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)in.h	8.3 (Berkeley) 1/3/94
+ *    @(#)in.h    8.3 (Berkeley) 1/3/94
  * $FreeBSD: release/9.1.0/sys/netinet/in.h 237910 2012-07-01 08:47:15Z tuexen $
  */
 #ifndef __OFPI_IN_H__
@@ -47,9 +47,9 @@
 extern uint8_t ofp_inetctlerrmap[];
 
 union ofp_sockaddr_store {
-	struct ofp_sockaddr_in addr;
+    struct ofp_sockaddr_in addr;
 #ifdef INET6
-	struct ofp_sockaddr_in6 addr6;
+    struct ofp_sockaddr_in6 addr6;
 #endif /* INET6 */
 };
 
@@ -59,14 +59,14 @@ union ofp_sockaddr_store {
  * the RFC 3678 libc functions and the kernel.
  */
 struct __msfilterreq {
-	uint32_t		 msfr_ifindex;	/* interface index */
-	uint32_t		 msfr_fmode;	/* filter mode for group */
-	uint32_t		 msfr_nsrcs;	/* # of sources in msfr_srcs */
-	struct ofp_sockaddr_storage_2	 msfr_group;	/* group address */
-	struct ofp_sockaddr_storage_2	*msfr_srcs;	/* pointer to the first member
-						 * of a contiguous array of
-						 * sources to filter in full.
-						 */
+    uint32_t         msfr_ifindex;    /* interface index */
+    uint32_t         msfr_fmode;    /* filter mode for group */
+    uint32_t         msfr_nsrcs;    /* # of sources in msfr_srcs */
+    struct ofp_sockaddr_storage_2     msfr_group;    /* group address */
+    struct ofp_sockaddr_storage_2    *msfr_srcs;    /* pointer to the first member
+                         * of a contiguous array of
+                         * sources to filter in full.
+                         */
 };
 
 #endif /* __OFPI_IN_H__ */

@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1982, 1986, 1990, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *    The Regents of the University of California.  All rights reserved.
  * Copyright (c) 2014, Nokia
  * Copyright (c) 2014, Enea Software AB
  *
@@ -28,7 +28,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)socketvar.h	8.3 (Berkeley) 2/19/95
+ *    @(#)socketvar.h    8.3 (Berkeley) 2/19/95
  *
  * $FreeBSD: release/9.1.0/sys/sys/sockstate.h 180948 2008-07-29 07:45:05Z kmacy $
  */
@@ -47,14 +47,14 @@
  * fields will be read without locks to improve performance and avoid
  * lock order issues.  However, this approach must be used with caution.
  */
-#define	SS_NOFDREF		0x0001	/* no file table ref any more */
-#define	SS_ISCONNECTED		0x0002	/* socket connected to a peer */
-#define	SS_ISCONNECTING		0x0004	/* in process of connecting to peer */
-#define	SS_ISDISCONNECTING	0x0008	/* in process of disconnecting */
-#define	SS_NBIO			0x0100	/* non-blocking ops */
-#define	SS_ASYNC		0x0200	/* async i/o notify */
-#define	SS_ISCONFIRMING		0x0400	/* deciding to accept connection req */
-#define	SS_ISDISCONNECTED	0x2000	/* socket disconnected from peer */
+#define    SS_NOFDREF        0x0001    /* no file table ref any more */
+#define    SS_ISCONNECTED        0x0002    /* socket connected to a peer */
+#define    SS_ISCONNECTING        0x0004    /* in process of connecting to peer */
+#define    SS_ISDISCONNECTING    0x0008    /* in process of disconnecting */
+#define    SS_NBIO            0x0100    /* non-blocking ops */
+#define    SS_ASYNC        0x0200    /* async i/o notify */
+#define    SS_ISCONFIRMING        0x0400    /* deciding to accept connection req */
+#define    SS_ISDISCONNECTED    0x2000    /* socket disconnected from peer */
 
 /*
  * Protocols can mark a socket as SS_PROTOREF to indicate that, following
@@ -63,28 +63,28 @@
  * following setting this flag in pru_detach(), and never otherwise, as
  * ofp_sofree() bypasses socket reference counting.
  */
-#define	SS_PROTOREF		0x4000	/* strong protocol reference */
+#define    SS_PROTOREF        0x4000    /* strong protocol reference */
 
-#define	SS_EVENT		0x8000	/* socket is handled by event mechanism */
+#define    SS_EVENT        0x8000    /* socket is handled by event mechanism */
 
 /*
  * Socket state bits now stored in the socket buffer state field.
  */
-#define	SBS_CANTSENDMORE	0x0010	/* can't send more data to peer */
-#define	SBS_CANTRCVMORE		0x0020	/* can't receive more data from peer */
-#define	SBS_RCVATMARK		0x0040	/* at mark on input */
+#define    SBS_CANTSENDMORE    0x0010    /* can't send more data to peer */
+#define    SBS_CANTRCVMORE        0x0020    /* can't receive more data from peer */
+#define    SBS_RCVATMARK        0x0040    /* at mark on input */
 
 
 struct socket;
 
-void	ofp_soisconnected(struct socket *so);
-void	ofp_soisconnecting(struct socket *so);
-void	ofp_soisdisconnected(struct socket *so);
-void	ofp_soisdisconnecting(struct socket *so);
-void	ofp_socantrcvmore(struct socket *so);
-void	ofp_socantrcvmore_locked(struct socket *so);
-void	ofp_socantsendmore(struct socket *so);
-void	ofp_socantsendmore_locked(struct socket *so);
-void	ofp_soisdisconnecting(struct socket *so);
+void    ofp_soisconnected(struct socket *so);
+void    ofp_soisconnecting(struct socket *so);
+void    ofp_soisdisconnected(struct socket *so);
+void    ofp_soisdisconnecting(struct socket *so);
+void    ofp_socantrcvmore(struct socket *so);
+void    ofp_socantrcvmore_locked(struct socket *so);
+void    ofp_socantsendmore(struct socket *so);
+void    ofp_socantsendmore_locked(struct socket *so);
+void    ofp_soisdisconnecting(struct socket *so);
 
 #endif /* _SYS_SOCKTATE_H_ */

@@ -44,15 +44,15 @@ void ofp_print_packet_buffer(FILE* f, const char *comment, uint8_t *p);
  * Debug LOG interface
  */
 struct ofp_flag_descript_s {
-	uint32_t flag;
-	const char *flag_descript;
+    uint32_t flag;
+    const char *flag_descript;
 };
 
 enum ofp_log_packet {
-	OFP_DEBUG_PKT_RECV_NIC = 0,
-	OFP_DEBUG_PKT_SEND_NIC,
-	OFP_DEBUG_PKT_RECV_KNI,
-	OFP_DEBUG_PKT_SEND_KNI
+    OFP_DEBUG_PKT_RECV_NIC = 0,
+    OFP_DEBUG_PKT_SEND_NIC,
+    OFP_DEBUG_PKT_RECV_KNI,
+    OFP_DEBUG_PKT_SEND_KNI
 };
 
 extern struct ofp_flag_descript_s ofp_flag_descript[];

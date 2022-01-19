@@ -45,18 +45,18 @@ end:
 /* dpdk log <logtype>/all <level> */
 void f_dpdk_log(struct cli_conn *conn, const char *s)
 {
-	const char *logtype = NULL;
-	int logtype_len = 0;
-	const char *level = NULL;
+    const char *logtype = NULL;
+    int logtype_len = 0;
+    const char *level = NULL;
     char *str = strdup(s);
     char* tmp_str = str;
     if (!str) {
         printf("[Error] input error!\n");
         return ;
     }
-	logtype = str;
-	while ((*str != ' ') && (*str != 0)) {
-		str++;
+    logtype = str;
+    while ((*str != ' ') && (*str != 0)) {
+        str++;
     }
     if (*str) {
         logtype_len = str - logtype;
@@ -64,12 +64,12 @@ void f_dpdk_log(struct cli_conn *conn, const char *s)
         str++;
     }    
 
-	if (*str != 0) {
-		while (*str == ' ')
-			str++;
-		if (*str != 0)
-			level  = str;
-	}
+    if (*str != 0) {
+        while (*str == ' ')
+            str++;
+        if (*str != 0)
+            level  = str;
+    }
     
     int ret = odp_dpdk_set_log(logtype, logtype_len, strtol(level, NULL, 0));
     if (strtol(level, NULL, 0) == 0 && !strncmp(logtype, "all", logtype_len)) {

@@ -2,7 +2,7 @@
  * Copyright (c) 2015, Nokia
  * All rights reserved.
  *
- * SPDX-License-Identifier:	BSD-3-Clause
+ * SPDX-License-Identifier:    BSD-3-Clause
  */
 #ifndef __OFPI_IFNET_H__
 #define __OFPI_IFNET_H__
@@ -14,9 +14,9 @@
 int ofp_pktio_open(struct ofp_ifnet *ifnet, odp_pktio_param_t *pktio_param);
 /* Initialize packet input queue parameters */
 void ofp_pktin_queue_param_init(odp_pktin_queue_param_t *param,
-				odp_pktin_mode_t in_mode,
-				odp_schedule_sync_t sched_sync,
-				odp_schedule_group_t sched_group);
+                odp_pktin_mode_t in_mode,
+                odp_schedule_sync_t sched_sync,
+                odp_schedule_group_t sched_group);
 /* Create loop queue */
 int ofp_loopq_create(struct ofp_ifnet *ifnet);
 /* Set ifnet interface MAC address */
