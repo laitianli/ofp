@@ -204,6 +204,9 @@ static int iter_vlan(void *key, void *iter_arg)
 
 
 	res = odp_pktio_stats(iface->pktio, &stats);
+    if (res < 0) {
+        return -1;
+    }
 
 	mask = odp_cpu_to_be_32(mask << (32 - iface->ip_addr_info[0].masklen));
 
