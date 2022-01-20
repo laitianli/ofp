@@ -46,6 +46,9 @@ void ofp_get_capture_file(char *filename, int max_size);
  */
 void ofp_print_packet(const char *comment, odp_packet_t pkt);
 
+void ofp_backtrace_backtrace(void);
+int ofp_backtrace_gstack(void);
+
 #if __GNUC__ >= 4
 #pragma GCC visibility pop
 #endif
