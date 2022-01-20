@@ -579,11 +579,9 @@ ofp_tcp_input(odp_packet_t *m, int off0)
     struct ofp_tcphdr tcp_savetcp;
     short ostate = 0;
 #endif
-    /* HJo: remove vlan hdr */
-    odp_packet_pull_head(*m, odp_packet_l3_offset(*m));
     odp_packet_l2_offset_set(*m, 0);
-    odp_packet_l3_offset_set(*m, 0);
-    odp_packet_l4_offset_set(*m, off0);
+    odp_packet_l3_offset_set(*m, OFP_ETHER_HDR_LEN);
+    odp_packet_l4_offset_set(*m, odp_packet_l3_offset(*m) + off0);
 
 #ifdef INET6
     isipv6 = (((struct ofp_ip *)odp_packet_data(*m))->ip_v == 6) ? 1 : 0;
@@ -659,10 +657,34 @@ ofp_tcp_input(odp_packet_t *m, int off0)
             }
         }
         */
+        ip = (struct ofp_ip *)odp_packet_l3_ptr(*m, NULL);
+        th = (struct ofp_tcphdr *)odp_packet_l4_ptr(*m, NULL);
+#if 1  /* check */
+#ifdef INET6
+    if (isipv6)
+        inp = ofp_in6_pcblookup_mbuf(&V_tcbinfo, &ip6->ip6_src,
+            th->th_sport, &ip6->ip6_dst, th->th_dport,
+            INPLOOKUP_WILDCARD | INPLOOKUP_WLOCKPCB,
+            ofp_packet_interface(*m), *m);
+    else
+#endif
+    inp = ofp_in_pcblookup_mbuf(&V_tcbinfo, ip->ip_src,
+                    th->th_sport, ip->ip_dst, th->th_dport,
+                    INPLOOKUP_WILDCARD | INPLOOKUP_WLOCKPCB,
+                    ofp_packet_interface(*m), *m);
 
-        ip = (struct ofp_ip *)odp_packet_data(*m);
-        th = (struct ofp_tcphdr *)((char *)ip + off0);
-
+    /*
+     * If the INPCB does not exist then all data in the incoming
+     * segment is discarded and an appropriate RST is sent back.
+     * XXX MRT Send RST using which routing table?
+     */
+    if (inp == NULL) {
+        OFP_DBG("[%s] return OFP_PKT_CONTINUE, ip_src: %s, ip_dst: %s, port_src: %u, port_dst:%u", __func__,
+            ofp_print_ip_addr(ip->ip_src.s_addr), ofp_print_ip_addr(ip->ip_dst.s_addr),
+            ntohs(th->th_sport), ntohs(th->th_dport));
+        return OFP_PKT_CONTINUE;    /* process it on slow path */
+    }
+#endif
 #ifdef OFP_IPv4_TCP_CSUM_VALIDATE
         if (ofp_packet_user_area(*m)->chksum_flags
                         & OFP_L4_CHKSUM_STATUS_VALID) {
@@ -701,7 +723,6 @@ ofp_tcp_input(odp_packet_t *m, int off0)
         /* Re-initialization for later version check */
         ip->ip_v = OFP_IPVERSION;
     }
-
 #ifdef INET6
     if (isipv6)
         iptos = (odp_be_to_cpu_32(ip6->ofp_ip6_flow) >> 20) & 0xff;
@@ -752,7 +773,6 @@ ofp_tcp_input(odp_packet_t *m, int off0)
      * Convert TCP protocol specific fields to host format.
      */
     tcp_fields_to_host(th);
-
     /*
      * Delay dropping TCP, IP headers, IPv6 ext headers, and TCP options.
      */
@@ -781,7 +801,7 @@ findpcb:
             ofp_packet_interface(*m), *m);
     else
 #endif
-        inp = ofp_in_pcblookup_mbuf(&V_tcbinfo, ip->ip_src,
+    inp = ofp_in_pcblookup_mbuf(&V_tcbinfo, ip->ip_src,
                     th->th_sport, ip->ip_dst, th->th_dport,
                     INPLOOKUP_WILDCARD | INPLOOKUP_WLOCKPCB,
                     ofp_packet_interface(*m), *m);
@@ -815,7 +835,7 @@ findpcb:
             INP_INFO_WUNLOCK(&V_tcbinfo);
             ti_locked = TI_UNLOCKED;
         }
-
+        OFP_DBG("[%s] return OFP_PKT_CONTINUE", __func__);
         return OFP_PKT_CONTINUE;    /* process it on slow path */
     }
 
