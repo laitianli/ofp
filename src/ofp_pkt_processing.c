@@ -175,7 +175,7 @@ enum ofp_return_code ofp_eth_vlan_processing(odp_packet_t *pkt)
             odp_packet_user_ptr_set(*pkt, ifnet);
     }
 
-    OFP_DBG("ETH TYPE = %04x", ethtype);
+    //OFP_DBG("ETH TYPE = %04x", ethtype);
 
     /* network layer classifier */
     switch (ethtype) {
@@ -187,6 +187,8 @@ enum ofp_return_code ofp_eth_vlan_processing(odp_packet_t *pkt)
 #endif /* INET */
 #ifdef INET6
     case OFP_ETHERTYPE_IPV6:
+		OFP_DBG("ETH TYPE:%04x,src:%s, dst: %s", ethtype, 
+    		ofp_print_mac((uint8_t *)eth->ether_shost), ofp_print_mac((uint8_t *)eth->ether_dhost));
         return ofp_ipv6_processing(pkt);
 #endif /* INET6 */
 #if 0
@@ -367,8 +369,13 @@ enum ofp_return_code ofp_ipv4_processing(odp_packet_t *pkt)
     if (!is_ours) {
         /* This may be for some other local interface. */
         nh = ofp_get_next_hop(dev->vrf, ip->ip_dst.s_addr, &flags);
-        if (nh)
-            is_ours = nh->flags & OFP_RTF_LOCAL;
+        if (nh) {
+            is_ours = (nh->flags & OFP_RTF_LOCAL) || /* local */
+				((nh->flags & OFP_RTF_GATEWAY) && (nh->gw)); /* default gw */
+			if (!is_ours) {
+				nh = NULL;
+			}
+        }
     }
 
     if (is_ours) {
@@ -474,7 +481,7 @@ enum ofp_return_code ofp_ipv6_processing(odp_packet_t *pkt)
 
     if (odp_unlikely(ipv6 == NULL))
         return OFP_PKT_DROP;
-
+	OFP_DBG("dev->ip6_addr: %s, dst addr:%s",  ofp_print_ip6_addr(dev->ip6_addr), ofp_print_ip6_addr(ipv6->ip6_dst.ofp_s6_addr));
     /* is ipv6->dst_addr one of my IPv6 addresses from this interface*/
     if (ofp_ip6_equal(dev->ip6_addr, ipv6->ip6_dst.ofp_s6_addr) ||
         OFP_IN6_IS_SOLICITED_NODE_MC(ipv6->ip6_dst, dev->ip6_addr) ||
@@ -484,13 +491,16 @@ enum ofp_return_code ofp_ipv6_processing(odp_packet_t *pkt)
 
             is_ours = 1;
     }
+	OFP_DBG("is_ours: %d", is_ours);
     /* check if it's ours for another ipv6 address */
     if (!is_ours) {
         nh = ofp_get_next_hop6(dev->vrf, ipv6->ip6_dst.ofp_s6_addr, &flags);
+		if(nh)
+			OFP_DBG("call ofp_get_next_hop6 nh: %p, nh->flags: 0x%x", nh, nh->flags);
         if (nh && (nh->flags & OFP_RTF_LOCAL))
             is_ours = 1;
     }
-
+	OFP_DBG("is_ours: %d", is_ours);
     if (is_ours) {
         OFP_HOOK(OFP_HOOK_LOCAL, *pkt, &protocol, &res);
         if (res != OFP_PKT_CONTINUE) {
@@ -513,11 +523,12 @@ enum ofp_return_code ofp_ipv6_processing(odp_packet_t *pkt)
         OFP_DBG("OFP_HOOK_FWD_IPv6 returned %d", res);
         return res;
     }
-
+	
     nh = ofp_get_next_hop6(dev->vrf, ipv6->ip6_dst.ofp_s6_addr, &flags);
+	OFP_DBG("call ofp_get_next_hop6 nh: %p", nh);
     if (nh == NULL)
         return OFP_PKT_CONTINUE;
-
+	OFP_DBG("call ofp_ipv6_output() send ipv6 packet");
     return ofp_ip6_output(*pkt, nh);
 }
 #endif /* INET6 */

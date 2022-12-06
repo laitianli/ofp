@@ -23,9 +23,9 @@
 
 #define SHM_NAME_RT_LOOKUP_MTRIE    "OfpRtlookupMtrieShMem"
 
-#define NUM_RT_RULES            global_param->mtrie.routes
-#define NUM_NODES            global_param->mtrie.table8_nodes
-#define NUM_NODES_LARGE            global_param->num_vrf
+#define NUM_RT_RULES            global_param->mtrie.routes /*  65536 */
+#define NUM_NODES            global_param->mtrie.table8_nodes /* 128 */
+#define NUM_NODES_LARGE            global_param->num_vrf  /* 1 */
 
 #define NUM_NODES_6            ROUTE6_NODES
 
@@ -494,6 +494,10 @@ ofp_rtl_insert(struct ofp_rtl_tree *tree, uint32_t addr_be,
 
             for (; index < index_end; index++) {
                 if (node[index].masklen <= masklen || node[index].masklen > high) {
+#if 0					
+					OFP_DBG("low: %u, high: %u, node[%u].masklen: %u, masklen: %u, index: %u, index_end: %u\n", 
+						low, high, index, node[index].masklen, masklen, index, index_end);
+#endif
                     node[index].data[0] = *data;
                     node[index].masklen = masklen;
                 }
@@ -512,6 +516,7 @@ ofp_rtl_insert(struct ofp_rtl_tree *tree, uint32_t addr_be,
             node->masklen = masklen;
 
         node = node->next;
+		OFP_DBG("masklen: %u, low: %u, high: %u, addr: 0x%x\n", masklen, low, high, addr);
     }
 
     return NULL;
@@ -591,7 +596,8 @@ struct ofp_nh_entry *ofp_rtl_search(struct ofp_rtl_tree *tree, uint32_t addr_be)
     struct ofp_rtl_node *elem, *node = tree->root;
     uint32_t addr = odp_be_to_cpu_32(addr_be);
     uint32_t low = 0, high = IPV4_FIRST_LEVEL;
-
+	
+	nh = &node->data[0];
     for (; high <= IPV4_LENGTH ; low = high, high += IPV4_LEVEL) {
         elem = find_node(node, addr, low, high);
 
