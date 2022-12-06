@@ -77,13 +77,43 @@ static void notify(union ofp_sigval sv)
     ss->pkt = ODP_PACKET_INVALID;
 }
 
+static int udpecho_recefrom(int serv_fd)
+{
+#define SOCKET_RX_BUF_LEN 1024 * 32
+	int exit_threads = 0;
+	struct ofp_sockaddr src_addr; 
+	ofp_socklen_t addrlen = sizeof(struct ofp_sockaddr);
+	uint8_t pkt_buf[SOCKET_RX_BUF_LEN];
+    int read_len;
+	int send_len = 0;
+	while (!exit_threads) {
+        pkt_buf[0] = '\0';
+        read_len = ofp_recvfrom(serv_fd, pkt_buf, SOCKET_RX_BUF_LEN,
+                   OFP_MSG_NBIO, &src_addr, &addrlen);
+        if (read_len < 0 && ofp_errno == OFP_EWOULDBLOCK)
+            continue;
+
+        if (read_len < 0) {
+            OFP_ERR("Error: ofp_recv failed: %d, err=%s\n",
+                ofp_errno, ofp_strerror(ofp_errno));
+            break;
+        }
+		printf("read_len=%d,recv: %s\n", read_len, pkt_buf);
+		send_len = ofp_sendto(serv_fd, pkt_buf, read_len, OFP_MSG_NBIO, &src_addr, addrlen);	
+		if (send_len <= 0) {
+			printf("[error] send data len:%d failed!!!\n", read_len);
+		}
+		printf("send data len: %d success.\n", send_len);
+    }
+	return 0;
+}
+
 static int udpecho(void *arg)
 {
     int serv_fd;
     struct ofp_sockaddr_in my_addr;
     uint32_t my_ip_addr;
-    ofp_fd_set read_fd;
-
+    
     (void)arg;
 
     OFP_INFO("UDP server thread started");
@@ -101,7 +131,7 @@ static int udpecho(void *arg)
              ofp_strerror(ofp_errno));
         return -1;
     }
-
+	OFP_INFO("udpecho server ip: %s\n", ofp_print_ip_addr(my_ip_addr));
     memset(&my_addr, 0, sizeof(my_addr));
     my_addr.sin_family = OFP_AF_INET;
     my_addr.sin_port = odp_cpu_to_be_16(2048);
@@ -114,7 +144,8 @@ static int udpecho(void *arg)
              ofp_strerror(ofp_errno));
         return -1;
     }
-
+#if 0
+	ofp_fd_set read_fd;
     struct ofp_sigevent ev;
     struct ofp_sock_sigval ss;
     ss.sockfd = serv_fd;
@@ -131,7 +162,9 @@ static int udpecho(void *arg)
     while (1) {
         sleep(1);
     }
-
+#else
+	udpecho_recefrom(serv_fd);
+#endif
     OFP_INFO("UDP server exiting");
     return 0;
 }
