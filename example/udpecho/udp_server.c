@@ -117,7 +117,7 @@ static int udpecho(void *arg)
     (void)arg;
 
     OFP_INFO("UDP server thread started");
-
+	pthread_setname_np(pthread_self(), "udpecho_rxtx");
     if (ofp_init_local()) {
         OFP_ERR("Error: OFP local init failed.\n");
         return -1;

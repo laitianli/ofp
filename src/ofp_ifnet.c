@@ -390,10 +390,14 @@ int ofp_ifnet_create(odp_instance_t instance,
             return -1;
         }
     }
-
-    odp_pktio_stats_reset(ifnet->pktio);
-
+#if 0
+	odp_pktio_stats_reset(ifnet->pktio);
+#else
+	OFP_DBG("del call odp_pktio_stats_reset()");
+#endif
 #ifdef SP
+	char* single_th = getenv("SP_SINGLE_THREAD");
+	if (!single_th || (atoi(single_th) == 0)) {
     /* Start VIF slowpath receiver thread */
     thr_params.start = sp_rx_thread;
     thr_params.arg = ifnet;
@@ -403,15 +407,76 @@ int ofp_ifnet_create(odp_instance_t instance,
                    &cpumask,
                    &thr_params);
 
-    /* Start VIF slowpath transmitter thread */
-    thr_params.start = sp_tx_thread;
-    thr_params.arg = ifnet;
-    thr_params.thr_type = ODP_THREAD_CONTROL;
-    thr_params.instance = instance;
-    odph_odpthreads_create(ifnet->tx_tbl,
-                   &cpumask,
-                   &thr_params);
+		/* Start VIF slowpath transmitter thread */
+		thr_params.start = sp_tx_thread;
+		thr_params.arg = ifnet;
+		thr_params.thr_type = ODP_THREAD_CONTROL;
+		thr_params.instance = instance;
+#if 0
+		odph_odpthreads_create(ifnet->tx_tbl,
+				       &cpumask,
+				       &thr_params);
+#else
+		int core_id = 2;
+		char* env=getenv("SP_TX_CORE");
+		if(env)
+			core_id = atoi(env);
+		odp_cpumask_t tmp_cpumask;
+		odp_cpumask_zero(&tmp_cpumask);
+		odp_cpumask_set(&tmp_cpumask, core_id);
+		odph_odpthreads_create(ifnet->tx_tbl,
+				       &tmp_cpumask,
+				       &thr_params);
+#endif
+	}
+	else {
+		static void* thread_args_array[NUM_PORTS] = {NULL};
+		static int array_index = 0;
+		odp_cpumask_t tmp_cpumask;
+		int core_id = 1;
+		char* env = NULL;
+		thread_args_array[array_index] = (void*)ifnet;
+		if (array_index == 0) {
+			thr_params.start = sp_rx_single_thread;
+			thr_params.arg = (void*)thread_args_array;
+			thr_params.thr_type = ODP_THREAD_CONTROL;
+			thr_params.instance = instance;
+			core_id = 3;
+			env = getenv("SP_RX_CORE");
+			if(env) {
+				core_id = atoi(env);
+				odp_cpumask_zero(&tmp_cpumask);
+				odp_cpumask_set(&tmp_cpumask, core_id);
+			}
+			else {
+				tmp_cpumask = cpumask;
+			}
+			odph_odpthreads_create(ifnet->rx_tbl,
+					       &tmp_cpumask,
+					       &thr_params);
+
+			/* Start VIF slowpath transmitter thread */
+			thr_params.start = sp_tx_single_thread;
+			thr_params.arg = (void*)thread_args_array;
+			thr_params.thr_type = ODP_THREAD_CONTROL;
+			thr_params.instance = instance;
+			core_id = 4;
+			env = getenv("SP_TX_CORE");
+			if(env) {
+				core_id = atoi(env);
+				odp_cpumask_zero(&tmp_cpumask);
+				odp_cpumask_set(&tmp_cpumask, core_id);
+			}
+			else {
+				tmp_cpumask = cpumask;
+			}
+			odph_odpthreads_create(ifnet->tx_tbl,
+					       &tmp_cpumask,
+					       &thr_params);
+		}
+		array_index ++;
+	}
 #endif /* SP */
 
-    return 0;
+	return 0;
 }

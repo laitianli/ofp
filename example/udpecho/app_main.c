@@ -128,21 +128,22 @@ int main(int argc, char *argv[])
 
     memset(thread_tbl, 0, sizeof(thread_tbl));
     /* Start dataplane dispatcher worker threads */
-
+	odp_cpumask_zero(&cpumask);
+	odp_cpumask_set(&cpumask, 1);
     thr_params.start = default_event_dispatcher;
     thr_params.arg = ofp_eth_vlan_processing;
     thr_params.thr_type = ODP_THREAD_WORKER;
     thr_params.instance = instance;
     odph_odpthreads_create(thread_tbl,
                    &cpumask,
-                   &thr_params);
-
+			       &thr_params);
+	app_init_params.linux_core_id = num_workers + 1;
     /* other app code here.*/
     /* Start CLI */
     ofp_start_cli_thread(instance, app_init_params.linux_core_id, params.cli_file);
 
-    /* udp echo server */
-    ofp_start_udpserver_thread(instance, app_init_params.linux_core_id);
+	/* udp echo server */
+	ofp_start_udpserver_thread(instance, app_init_params.linux_core_id + 1);
 
     odph_odpthreads_join(thread_tbl);
     printf("End Main()\n");

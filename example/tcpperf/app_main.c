@@ -1034,11 +1034,12 @@ int main(int argc, char *argv[])
      */
     next_worker = 1;
     num_workers = (gbl_args->appl.single_thread) ? 1 : 2;
-    if ((odp_cpu_count() - 1) < num_workers) {
-        OFP_ERR("ERROR: At least %d cores required\n", num_workers + 1);
-        exit(EXIT_FAILURE);
-    }
-
+#if 0
+	if ((odp_cpu_count() - 1) < num_workers) {
+		OFP_ERR("ERROR: At least %d cores required\n", num_workers + 1);
+		exit(EXIT_FAILURE);
+	}
+#endif
     printf("Worker threads:  %i\n", num_workers);
     printf("First worker:    %i\n\n", next_worker);
     /* 5.ofp全局参数初始化 */
