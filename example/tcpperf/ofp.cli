@@ -1,0 +1,3 @@
+loglevel set debug
+ifconfig fp0 192.168.80.129/24
+debug 0

@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
 	parse_args(argc, argv, &params);
 
 	if (odp_init_global(&instance, NULL, NULL)) {
-		OFP_ERR("Error: ODP global init failed.\n");
+		printf("Error: ODP global init failed.\n");
 		exit(EXIT_FAILURE);
 	}
 	if (odp_init_local(instance, ODP_THREAD_CONTROL)) {

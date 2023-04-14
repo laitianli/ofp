@@ -194,7 +194,7 @@ int sp_rx_thread(void *ifnet_void)
 	struct ofp_global_config_mem *ofp_global_cfg;
 
 	(void) len;
-
+	pthread_setname_np(pthread_self(), "sp_rx");
 	if (ofp_init_local()) {
 		OFP_ERR("Error: OFP local init failed.");
 		return -1;
@@ -206,7 +206,6 @@ int sp_rx_thread(void *ifnet_void)
 		ofp_term_local();
 		return -1;
 	}
-
 	while (ofp_global_cfg->is_running) {
 		ev = odp_queue_deq(ifnet->spq_def);
 
@@ -263,7 +262,7 @@ int sp_tx_thread(void *ifnet_void)
 	struct ofp_global_config_mem *ofp_global_cfg;
 	struct timeval timeout;
 	fd_set read_fd;
-
+	pthread_setname_np(pthread_self(), "sp_tx");
 	if (ofp_init_local()) {
 		OFP_ERR("Error: OFP local init failed.\n");
 		return -1;
