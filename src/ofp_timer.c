@@ -212,7 +212,7 @@ int ofp_timer_init_global(int resolution_us,
 	timer_params.max_tmo = max_us*ODP_TIME_USEC_IN_NS;
 	timer_params.num_timers = TIMER_NUM_TIMERS;
 	timer_params.priv = 0; /* Shared */
-	timer_params.clk_src = ODP_CLOCK_CPU;
+	timer_params.clk_src = /*ODP_CLOCK_CPU*/ODP_CLOCK_DEFAULT;
 	shm->socket_timer_pool = odp_timer_pool_create("TmrPool",
 						       &timer_params);
 
@@ -426,9 +426,15 @@ odp_timer_t ofp_timer_start_cpu_id(uint64_t tmo_us, ofp_timer_callback callback,
 			OFP_ERR("odp_timer_alloc failed");
 			return ODP_TIMER_INVALID;
 		}
-
+#if 0
 		t = odp_timer_set_abs(timer, tick, &bufdata->t_ev);
-
+#else
+		odp_timer_start_t tm_param = {0};
+		tm_param.tick = tick;
+		tm_param.tmo_ev = bufdata->t_ev;
+		tm_param.tick_type = ODP_TIMER_TICK_ABS;
+		t = odp_timer_start(timer, &tm_param);
+#endif
 		if (t != ODP_TIMER_SUCCESS) {
 			odp_timer_free(timer);
 			odp_timeout_free(tmo);
