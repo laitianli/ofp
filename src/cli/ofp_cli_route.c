@@ -38,6 +38,12 @@ void f_route_add(struct cli_conn *conn, const char *s)
 		   &a, &b, &c, &d, &mlen,
 		   &e, &f, &g, &h, dev) != 10)
 		return;
+	char route_cmd[256] = {0};
+	snprintf(route_cmd, sizeof(route_cmd) -1, 
+		"ip route add %d.%d.%d.%d/%d via %d.%d.%d.%d dev %s",
+		a, b, c, d, mlen, e, f, g, h, dev);
+	OFP_INFO("run cmd: %s\n", route_cmd);
+	system(route_cmd);
 	destaddr = odp_cpu_to_be_32((a << 24) | (b << 16) | (c << 8) | d);
 	gwaddr = odp_cpu_to_be_32((e << 24) | (f << 16) | (g << 8) | h);
 
@@ -180,6 +186,12 @@ void f_route_del(struct cli_conn *conn, const char *s)
 	if (sscanf(s, "%d.%d.%d.%d/%d",
 		&a, &b, &c, &d, &mlen) != 5)
 		return;
+	char route_cmd[256] = {0};
+	snprintf(route_cmd, sizeof(route_cmd) -1, 
+		"ip route del %d.%d.%d.%d/%d",
+		a, b, c, d, mlen);
+	OFP_INFO("run cmd: %s\n", route_cmd);
+	system(route_cmd);
 	destaddr = odp_cpu_to_be_32((a << 24) | (b << 16) | (c << 8) | d);
 
 	ofp_set_route_params(OFP_ROUTE_DEL, 0 /*vrf*/, 0 /*vlan*/, 0 /*port*/,

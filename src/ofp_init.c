@@ -404,6 +404,12 @@ static int ofp_init_pre_global(ofp_global_param_t *params)
 		return -1;
 	}
 
+	ofp_packet_pool_rx = ofp_pool_create(SHM_PKT_POOL_NAME"_rx", &pool_params);
+		if (ofp_packet_pool_rx == ODP_POOL_INVALID) {
+			OFP_ERR("odp_pool_create failed");
+			return -1;
+		}
+
 	HANDLE_ERROR(ofp_socket_init_global(ofp_packet_pool));
 	HANDLE_ERROR(ofp_tcp_var_init_global());
 	HANDLE_ERROR(ofp_inet_init());
@@ -412,7 +418,7 @@ static int ofp_init_pre_global(ofp_global_param_t *params)
 
 	return 0;
 }
-
+odp_pool_t ofp_packet_pool_rx;
 odp_pool_t ofp_packet_pool;
 odp_cpumask_t cpumask;
 int ofp_init_global_called = 0;

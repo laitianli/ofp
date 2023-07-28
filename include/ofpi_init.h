@@ -11,7 +11,7 @@
 #include <odp/helper/odph_api.h>
 
 #define SHM_NAME_GLOBAL_CONFIG "OfpGlobalConfigShMem"
-
+extern odp_pool_t ofp_packet_pool_rx;
 extern odp_pool_t ofp_packet_pool;
 extern odp_cpumask_t cpumask;
 

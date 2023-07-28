@@ -12,6 +12,7 @@
 #include <sys/stat.h>
 #include <net/if.h>
 #include <linux/if_tun.h>
+#include <sys/epoll.h>
 #include <errno.h>
 
 #include <odp_api.h>
@@ -23,6 +24,13 @@
 #include "ofpi_stat.h"
 #include "ofpi_log.h"
 #include "ofpi_util.h"
+
+struct sp_epoll_fds {
+	int 		pfd;
+	unsigned int numfds;
+};
+
+struct sp_epoll_fds sp_fds;
 
 static int tap_alloc(char *dev, int flags) {
 
@@ -80,6 +88,28 @@ static int tap_alloc(char *dev, int flags) {
 	return fd;
 }
 
+static inline int init_epoll_pfd(struct ofp_ifnet *ifnet)
+{
+	static int pfd = 0;
+	static int first = 1;
+	if (first) {
+		memset(&sp_fds, 0, sizeof(sp_fds));
+		pfd = epoll_create(1);
+		first = 0;
+	}
+	sp_fds.pfd = pfd;
+	static struct epoll_event pipe_event = {
+			.events = EPOLLIN | EPOLLPRI,
+		};
+	sp_fds.numfds += 1;
+	pipe_event.data.fd = ifnet->fd;
+	if (epoll_ctl(pfd, EPOLL_CTL_ADD, ifnet->fd, &pipe_event) < 0) {
+			OFP_ERR("Error adding fd to %d epoll_ctl, %s\n",
+					ifnet->fd, strerror(errno));
+			return -1;
+	}
+	return 0;
+}
 /* Return the fd of the tap */
 int sp_setup_device(struct ofp_ifnet *ifnet)
 {
@@ -176,7 +206,7 @@ int sp_setup_device(struct ofp_ifnet *ifnet)
 	ifnet->linux_index = ifr.ifr_ifindex;
 	ifnet->sp_status = OFP_SP_UP;
 	ifnet->fd = fd;
-
+	init_epoll_pfd(ifnet);
 	close(gen_fd);
 	return 0;
 }
@@ -194,7 +224,7 @@ int sp_rx_thread(void *ifnet_void)
 	struct ofp_global_config_mem *ofp_global_cfg;
 
 	(void) len;
-
+	pthread_setname_np(pthread_self(), "sp_rx");
 	if (ofp_init_local()) {
 		OFP_ERR("Error: OFP local init failed.");
 		return -1;
@@ -263,7 +293,7 @@ int sp_tx_thread(void *ifnet_void)
 	struct ofp_global_config_mem *ofp_global_cfg;
 	struct timeval timeout;
 	fd_set read_fd;
-
+	pthread_setname_np(pthread_self(), "sp_tx");
 	if (ofp_init_local()) {
 		OFP_ERR("Error: OFP local init failed.\n");
 		return -1;
@@ -334,6 +364,191 @@ drop_pkg:
 	}
 
 	OFP_DBG("SP TX thread of %s exiting", ifnet->if_name);
+	ofp_term_local();
+	return 0;
+}
+int sp_rx_single_thread(void *arg)
+{
+	unsigned int i = 0;
+	void** ifnet_array = (void**)arg;
+	struct ofp_ifnet *ifnet = NULL;
+	struct ofp_ifnet *pkt_ifnet;
+	struct ofp_ether_header *eth;
+	struct ofp_ether_vlan_header *vlan_hdr;
+	uint16_t vlan = 0;
+	odp_packet_t pkt;
+	odp_event_t ev;
+	int len;
+	struct ofp_global_config_mem *ofp_global_cfg;
+
+	(void) len;
+	sleep(5);
+	if (ofp_init_local()) {
+		OFP_ERR("Error: OFP local init failed.");
+		return -1;
+	}
+
+	ofp_global_cfg = ofp_get_global_config();
+	if (!ofp_global_cfg) {
+		OFP_ERR("Error: Failed to retrieve global configuration.");
+		ofp_term_local();
+		return -1;
+	}
+	pthread_setname_np(pthread_self(), "sp_rx_single");
+	while (ofp_global_cfg->is_running) {
+		for (i = 0; i < NUM_PORTS; i++) {
+			ifnet = (struct ofp_ifnet *)ifnet_array[i];
+			if (!ifnet) {
+				break;
+			}
+			ev = odp_queue_deq(ifnet->spq_def);
+
+			if (ev == ODP_EVENT_INVALID ||
+			    odp_event_type(ev) != ODP_EVENT_PACKET) {
+				if (i >= sp_fds.numfds - 1) {
+					int j = 0;
+					struct ofp_ifnet *ifnet_tmp = NULL;
+					for (j = 0; j < NUM_PORTS; j++) {
+						ifnet_tmp = (struct ofp_ifnet *)ifnet_array[j];
+						if (!ifnet_tmp) {
+							break;
+						}
+						ev = odp_queue_deq(ifnet_tmp->spq_def);
+						if (ev != ODP_EVENT_INVALID && 
+							odp_event_type(ev) == ODP_EVENT_PACKET) {
+							i = j;
+							ifnet = ifnet_tmp;
+							goto do_handle;
+						}
+					}
+					usleep(2000);
+				}
+				continue;
+			}
+do_handle:				
+			pkt = odp_packet_from_event(ev);
+
+			if (ifnet->sp_status != OFP_SP_UP) {
+				odp_packet_free(pkt);
+				continue;
+			}
+
+			eth = odp_packet_l2_ptr(pkt, NULL);
+			if (odp_be_to_cpu_16(eth->ether_type) == OFP_ETHERTYPE_VLAN) {
+				vlan_hdr = (struct ofp_ether_vlan_header *)eth;
+				vlan = OFP_EVL_VLANOFTAG(vlan_hdr->evl_tag);
+			} else {
+				vlan = 0;
+			}
+
+			pkt_ifnet = ofp_get_ifnet(ifnet->port, vlan);
+			if (pkt_ifnet == NULL ||
+			    pkt_ifnet->sp_status != OFP_SP_UP){
+				odp_packet_free(pkt);
+				continue;
+			}
+
+			OFP_DEBUG_PACKET(OFP_DEBUG_PKT_RECV_KNI, pkt, ifnet->port);
+
+			OFP_UPDATE_PACKET_STAT(rx_sp, 1);
+
+			len = write(ifnet->fd,
+				    (void *)odp_packet_l2_ptr(pkt, NULL),
+				    (size_t)odp_packet_len(pkt));
+
+			odp_packet_free(pkt);
+		}
+	}
+
+	ofp_term_local();
+	return 0;
+}
+
+static inline int do_sp_tx_single_thread(struct ofp_ifnet* ifnet)
+{
+	int len;
+	odp_packet_t pkt;
+	uint8_t *buf_pnt;
+	/* FIXME: coalese syscalls and speed this up */
+	uint32_t pkt_len = ifnet->if_mtu + OFP_ETHER_HDR_LEN +
+			   OFP_ETHER_VLAN_ENCAP_LEN;
+	pkt = ofp_packet_alloc_from_pool(ifnet->pkt_pool, pkt_len);
+	if (pkt == ODP_PACKET_INVALID) {
+		OFP_ERR("ofp_packet_alloc failed");
+		return -1;
+	}
+	buf_pnt = odp_packet_data(pkt);
+	len = read(ifnet->fd, buf_pnt, odp_packet_len(pkt));
+	if (len <= 0) {
+		OFP_ERR("read failed");
+		return -1;
+	}
+
+	if (len > 0) {
+		odp_packet_reset(pkt, (size_t)len);
+		odp_packet_l2_offset_set(pkt, 0);
+
+		OFP_DEBUG_PACKET(OFP_DEBUG_PKT_SEND_KNI, pkt,
+			ifnet->port);
+
+		OFP_UPDATE_PACKET_STAT(tx_sp, 1);
+
+		/* Enqueue the packet to fastpath device */
+		if (ofp_send_pkt_multi(ifnet, &pkt, 1, odp_cpu_id()) != 1) {
+			odp_packet_free(pkt);
+			OFP_ERR("odp_queue_enq failed");
+			return -1;
+		}
+	}
+	return 0;
+}
+
+int sp_tx_single_thread(void *arg)
+{
+
+	int i, j;
+	void** ifnet_array = (void**)arg;
+	struct ofp_ifnet *ifnet = NULL;
+	struct ofp_global_config_mem *ofp_global_cfg;
+	int nfds = 0;
+	struct epoll_event events[sp_fds.numfds];
+	sleep(5);
+	if (ofp_init_local()) {
+		OFP_ERR("Error: OFP local init failed.\n");
+		return -1;
+	}
+
+	ofp_global_cfg = ofp_get_global_config();
+	if (!ofp_global_cfg) {
+		OFP_ERR("Error: Failed to retrieve global configuration.");
+		ofp_term_local();
+		return -1;
+	}
+	pthread_setname_np(pthread_self(), "sp_tx_single");
+	while (ofp_global_cfg->is_running) {
+		nfds = epoll_wait(sp_fds.pfd, events, sp_fds.numfds, -1);
+		/* epoll_wait fail */
+		if (nfds < 0) {
+			if (errno == EINTR)
+				continue;
+			OFP_ERR("epoll_wait returns with fail\n");
+			return -1;
+		}
+		/* epoll_wait timeout, will never happens here */
+		else if (nfds == 0)
+			continue;
+		for (i = 0; i < nfds; i++) {
+			for (j = 0; j < NUM_PORTS; j++) {
+				ifnet = (struct ofp_ifnet *)ifnet_array[j];
+				if (!ifnet)
+					break;
+				else if (ifnet->fd == events[i].data.fd) {
+					do_sp_tx_single_thread(ifnet);;
+				}
+			}
+		}
+	}
+
 	ofp_term_local();
 	return 0;
 }

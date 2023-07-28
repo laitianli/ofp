@@ -305,8 +305,9 @@ int ofp_ifnet_create(odp_instance_t instance,
 	ifnet->if_state = OFP_IFT_STATE_USED;
 	strncpy(ifnet->if_name, if_name, OFP_IFNAMSIZ);
 	ifnet->if_name[OFP_IFNAMSIZ-1] = 0;
-	ifnet->pkt_pool = ofp_packet_pool;
-
+	ifnet->pkt_pool = ofp_packet_pool_rx;
+	//ifnet->pkt_pool_rx = ofp_packet_pool_rx;
+	
 	if (!pktio_param) {
 		pktio_param = &pktio_param_local;
 		odp_pktio_param_init(&pktio_param_local);
@@ -391,32 +392,106 @@ int ofp_ifnet_create(odp_instance_t instance,
 			return -1;
 		}
 	}
-
+#if 0 /*del by ltl*/
 	odp_pktio_stats_reset(ifnet->pktio);
-
+#endif
 #ifdef SP
-	odph_thread_param_init(&thr_params);
-	thr_params.thr_type = ODP_THREAD_CONTROL;
-	thr_params.arg = ifnet;
-	odph_thread_common_param_init(&thr_common);
-	thr_common.instance = instance;
-	thr_common.cpumask = &cpumask;
-	thr_common.share_param = 1;
+	char* single_th = getenv("SP_SINGLE_THREAD");
+	if (!single_th || (atoi(single_th) == 0)) {
+		odph_thread_param_init(&thr_params);
+		thr_params.thr_type = ODP_THREAD_CONTROL;
+		thr_params.arg = ifnet;
+		odph_thread_common_param_init(&thr_common);
+		thr_common.instance = instance;
+#if 0	
+		thr_common.cpumask = &cpumask;
+#else
+		int core_id = 2;
+		char* env=getenv("SP_RX_CORE");
+		if(env)
+			core_id = atoi(env);
+		odp_cpumask_t tmp_cpumask;
+		odp_cpumask_zero(&tmp_cpumask);
+		odp_cpumask_set(&tmp_cpumask, core_id);
+		thr_common.cpumask = &tmp_cpumask;
+#endif
+		thr_common.share_param = 1;
 
-	/* Start VIF slowpath receiver thread */
-	thr_params.start = sp_rx_thread;
+		/* Start VIF slowpath receiver thread */
+		thr_params.start = sp_rx_thread;
 
-	if (odph_thread_create(ifnet->rx_tbl, &thr_common, &thr_params, 1) != 1) {
-		OFP_ERR("Error: odph_thread_create() failed.\n");
-		exit(EXIT_FAILURE);
+		if (odph_thread_create(ifnet->rx_tbl, &thr_common, &thr_params, 1) != 1) {
+			OFP_ERR("Error: odph_thread_create() failed.\n");
+			exit(EXIT_FAILURE);
+		}
+#if 1
+		core_id = 3;
+		env=getenv("SP_TX_CORE");
+		if(env)
+			core_id = atoi(env);
+		odp_cpumask_zero(&tmp_cpumask);
+		odp_cpumask_set(&tmp_cpumask, core_id);
+		thr_common.cpumask = &tmp_cpumask;
+#endif
+		/* Start VIF slowpath transmitter thread */
+		thr_params.start = sp_tx_thread;
+
+		if (odph_thread_create(ifnet->tx_tbl, &thr_common, &thr_params, 1) != 1) {
+			OFP_ERR("Error: odph_thread_create() failed.\n");
+			exit(EXIT_FAILURE);
+		}
 	}
+	else {
+		static void* thread_args_array[NUM_PORTS] = {NULL};
+		static int array_index = 0;
+		odp_cpumask_t tmp_cpumask;
+		int core_id = 1;
+		char* env = NULL;
+		thread_args_array[array_index] = (void*)ifnet;
+		if (array_index == 0) {
+			odph_thread_param_init(&thr_params);
+			thr_params.thr_type = ODP_THREAD_CONTROL;
+			thr_params.arg = (void*)thread_args_array;
+			odph_thread_common_param_init(&thr_common);
+			thr_common.instance = instance;
 
-	/* Start VIF slowpath transmitter thread */
-	thr_params.start = sp_tx_thread;
+			int core_id = 2;
+			char* env=getenv("SINGLE_SP_RX_CORE");
+			if(env)
+				core_id = atoi(env);
+			odp_cpumask_t tmp_cpumask;
+			odp_cpumask_zero(&tmp_cpumask);
+			odp_cpumask_set(&tmp_cpumask, core_id);
+			thr_common.cpumask = &tmp_cpumask;
 
-	if (odph_thread_create(ifnet->tx_tbl, &thr_common, &thr_params, 1) != 1) {
-		OFP_ERR("Error: odph_thread_create() failed.\n");
-		exit(EXIT_FAILURE);
+			thr_common.share_param = 1;
+
+			/* Start VIF slowpath receiver thread */
+			thr_params.start = sp_rx_single_thread;
+
+			if (odph_thread_create(ifnet->rx_tbl, &thr_common, &thr_params, 1) != 1) {
+				OFP_ERR("Error: odph_thread_create() failed.\n");
+				exit(EXIT_FAILURE);
+			}
+			
+			core_id = 3;
+			env=getenv("SINGLE_SP_TX_CORE");
+			if(env)
+				core_id = atoi(env);
+			odp_cpumask_zero(&tmp_cpumask);
+			odp_cpumask_set(&tmp_cpumask, core_id);
+			thr_common.cpumask = &tmp_cpumask;
+
+			/* Start VIF slowpath transmitter thread */
+			thr_params.start = sp_tx_single_thread;
+
+			if (odph_thread_create(ifnet->tx_tbl, &thr_common, &thr_params, 1) != 1) {
+				OFP_ERR("Error: odph_thread_create() failed.\n");
+				exit(EXIT_FAILURE);
+			}
+
+		}
+		array_index ++;
 	}
 #endif /* SP */
 

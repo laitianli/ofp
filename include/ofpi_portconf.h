@@ -362,6 +362,8 @@ struct ofp_ifnet *ofp_ifaddr6_elem_get(uint8_t *addr6);
 
 int sp_tx_thread(void *ifnet_void);
 int sp_rx_thread(void *ifnet_void);
+int sp_tx_single_thread(void *arg);
+int sp_rx_single_thread(void *arg);
 int sp_setup_device(struct ofp_ifnet *ifnet);
 
 int ofp_free_port_alloc(void);

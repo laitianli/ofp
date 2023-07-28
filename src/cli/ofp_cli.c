@@ -1704,7 +1704,7 @@ static int cli_server(void *arg)
 	int select_nfds;
 
 	close_cli = 0;
-
+	pthread_setname_np(pthread_self(), "cli");
 	file_name = (char *)arg;
 
 	OFP_INFO("CLI server started on core %i\n", odp_cpu_id());

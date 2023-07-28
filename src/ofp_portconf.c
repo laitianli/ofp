@@ -191,6 +191,66 @@ static void print_eth_stats (odp_pktio_stats_t stats, int fd)
 		stats.out_discards,
 		stats.out_errors);
 }
+struct prev_stats {
+	uint64_t prev_ns;
+    uint64_t prev_pkts_rx;
+    uint64_t prev_pkts_tx;
+    uint64_t prev_bytes_rx;
+    uint64_t prev_bytes_tx;
+}prev_st[OFP_FP_INTERFACE_MAX];
+
+static void show_throuthput(int fd, odp_pktio_stats_t* stats, int portid)
+{
+#if 0
+    static uint64_t prev_ns;
+    static uint64_t prev_pkts_rx;
+    static uint64_t prev_pkts_tx;
+    static uint64_t prev_bytes_rx;
+    static uint64_t prev_bytes_tx;
+#else
+	struct prev_stats *ps = &prev_st[portid];
+#endif	
+    uint64_t diff_pkts_rx, diff_pkts_tx, diff_bytes_rx, diff_bytes_tx,
+                diff_ns;
+    uint64_t mpps_rx, mpps_tx, mbps_rx, mbps_tx;
+    struct timespec cur_time;
+    diff_ns = 0; 
+    if (clock_gettime(CLOCK_MONOTONIC_RAW, &cur_time) == 0) { 
+        uint64_t ns;
+        ns = cur_time.tv_sec * NS_PER_SEC;
+        ns += cur_time.tv_nsec;
+        if (ps->prev_ns != 0)
+            diff_ns = ns - ps->prev_ns;
+        ps->prev_ns = ns;
+    }    
+
+    diff_pkts_rx = (stats->in_ucast_pkts > ps->prev_pkts_rx) ?
+        (stats->in_ucast_pkts - ps->prev_pkts_rx) : 0; 
+    diff_pkts_tx = (stats->out_ucast_pkts > ps->prev_pkts_tx) ?
+        (stats->out_ucast_pkts - ps->prev_pkts_tx) : 0; 
+    ps->prev_pkts_rx = stats->in_ucast_pkts;
+    ps->prev_pkts_tx = stats->out_ucast_pkts;
+    mpps_rx = diff_ns > 0 ?
+        (double)diff_pkts_rx / diff_ns * NS_PER_SEC : 0; 
+    mpps_tx = diff_ns > 0 ?
+        (double)diff_pkts_tx / diff_ns * NS_PER_SEC : 0; 
+
+    diff_bytes_rx = (stats->in_octets > ps->prev_bytes_rx) ?
+        (stats->in_octets - ps->prev_bytes_rx) : 0; 
+    diff_bytes_tx = (stats->out_octets > ps->prev_bytes_tx) ?
+        (stats->out_octets - ps->prev_bytes_tx) : 0; 
+    ps->prev_bytes_rx = stats->in_octets;
+    ps->prev_bytes_tx = stats->out_octets;
+    mbps_rx = diff_ns > 0 ?
+        (double)diff_bytes_rx / diff_ns * NS_PER_SEC : 0; 
+    mbps_tx = diff_ns > 0 ?
+        (double)diff_bytes_tx / diff_ns * NS_PER_SEC : 0; 
+
+    ofp_sendf(fd, " Throughput (since last show)\r\n");
+    ofp_sendf(fd, "\tRx-pps: %12lld  Rx-bps: %12lld\r\n"
+                  "\tTx-pps: %12lld  Tx-bps: %12lld\r\n",
+                  mpps_rx, mbps_rx * 8, mpps_tx, mbps_tx * 8);
+}
 
 static int iter_vlan(void *key, void *iter_arg)
 {
@@ -203,7 +263,8 @@ static int iter_vlan(void *key, void *iter_arg)
 
 
 	res = odp_pktio_stats(iface->pktio, &stats);
-
+	if (res < 0)
+		return res;
 	mask = odp_cpu_to_be_32(mask << (32 - iface->ip_addr_info[0].masklen));
 
 	if (ofp_if_type(iface) == OFP_IFT_GRE && iface->vlan) {
@@ -349,14 +410,15 @@ static int iter_vlan(void *key, void *iter_arg)
 		ofp_sendf(fd,
 			"	Link encap:Ethernet	HWaddr: %s\r\n",
 			ofp_print_mac(iface->mac));
-
-		if (iface->ip_addr_info[0].ip_addr)
-			ofp_sendf(fd,
-				"	inet addr:%s	Bcast:%s	Mask:%s\r\n",
-				ofp_print_ip_addr(iface->ip_addr_info[0].ip_addr),
-				ofp_print_ip_addr(iface->ip_addr_info[0].bcast_addr),
-				ofp_print_ip_addr(mask));
-
+		for (int i=0; i < OFP_NUM_IFNET_IP_ADDRS; i++)
+		{		
+			if (iface->ip_addr_info[i].ip_addr)
+				ofp_sendf(fd,
+					"	inet addr:%-16s Bcast:%s  Mask:%s\r\n",
+					ofp_print_ip_addr(iface->ip_addr_info[i].ip_addr),
+					ofp_print_ip_addr(iface->ip_addr_info[i].bcast_addr),
+					ofp_print_ip_addr(mask));
+		}
 #ifdef INET6
 		ofp_sendf(fd,
 			"	inet6 addr: %s Scope:Link\r\n",
@@ -376,6 +438,7 @@ static int iter_vlan(void *key, void *iter_arg)
 			print_eth_stats(stats, fd);
 		else
 			ofp_sendf(fd, "\r\n");
+		show_throuthput(fd, &stats, atoi(iface->if_name));
 	} else {
 		ofp_sendf(fd, "%s%d%s\r\n"
 			"	Link not configured\r\n\r\n",
@@ -570,6 +633,7 @@ const char *ofp_config_interface_up_v4(int port, uint16_t vlan, uint16_t vrf,
 			data->sp_status = OFP_SP_DOWN;
 
 		mask_t = odp_be_to_cpu_32(mask);
+#if 0		
 		snprintf(cmd, sizeof(cmd), "ifconfig %s %s netmask %d.%d.%d.%d up",
 			 ofp_port_vlan_to_ifnet_name(port, vlan),
 			 ofp_print_ip_addr(addr),
@@ -577,10 +641,16 @@ const char *ofp_config_interface_up_v4(int port, uint16_t vlan, uint16_t vrf,
 			(uint8_t)(mask_t >> 16),
 			(uint8_t)(mask_t >> 8),
 			(uint8_t)mask_t);
+#else
+		snprintf(cmd, sizeof(cmd) - 1, "ip addr add %s/%d dev %s", 
+			ofp_print_ip_addr(addr), masklen, 
+			ofp_port_vlan_to_ifnet_name(port, vlan));
+#endif
 
 		ret = exec_sys_call_depending_on_vrf(cmd, vrf);
 #endif /* SP */
 	} else {
+#if 0	
 		if (data->ip_addr_info[0].ip_addr) {
 			ofp_set_route_params(OFP_ROUTE_DEL, data->vrf, 0 /*vlan*/,
 					port, data->ip_addr_info[0].ip_addr, data->ip_addr_info[0].masklen,
@@ -589,7 +659,9 @@ const char *ofp_config_interface_up_v4(int port, uint16_t vlan, uint16_t vrf,
 					port, data->ip_addr_info[0].ip_addr, 32,
 					0, 0);
 		}
-
+#else
+		OFP_INFO("[Note] delete ofp_set_route_params() routing.\n");
+#endif
 		data->vrf = vrf;
 
 		/* Add interface to the if_addr v4 queue */
@@ -611,6 +683,7 @@ const char *ofp_config_interface_up_v4(int port, uint16_t vlan, uint16_t vrf,
 			data->sp_status = OFP_SP_DOWN;
 
 		mask_t = odp_be_to_cpu_32(mask);
+#if 0
 		snprintf(cmd, sizeof(cmd), "ifconfig %s %s netmask %d.%d.%d.%d up",
 			ofp_port_vlan_to_ifnet_name(port, 0),
 			ofp_print_ip_addr(addr),
@@ -618,6 +691,11 @@ const char *ofp_config_interface_up_v4(int port, uint16_t vlan, uint16_t vrf,
 			(uint8_t)(mask_t >> 16),
 			(uint8_t)(mask_t >> 8),
 			(uint8_t)mask_t);
+#else
+		snprintf(cmd, sizeof(cmd) - 1, "ip addr add %s/%d dev %s", 
+			ofp_print_ip_addr(addr), masklen, 
+			ofp_port_vlan_to_ifnet_name(port, 0));
+#endif
 		ret = exec_sys_call_depending_on_vrf(cmd, vrf);
 #endif /* SP */
 	}
