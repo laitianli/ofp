@@ -118,6 +118,8 @@ typedef	__ofp_uid_t		ofp_uid_t;
 #define	OFP_SO_PASSIVE	0x00020000	/* socket will be used for passive reassembly */
 #define	OFP_SO_PASSIVECLNT	0x00040000	/* client socket in the passive pair */
 #define	OFP_SO_ALTFIB		0x00080000	/* alternate FIB is set */
+#define	OFP_SO_UDP_TX_NOCHECKSUM		0x00100000	/* udp socket tx checksum is set */
+
 
 /*
  * Additional options, not kept in so_options.

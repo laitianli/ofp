@@ -2067,7 +2067,17 @@ ofp_sosetopt(struct socket *so, struct sockopt *sopt)
 		case OFP_SO_ALTFIB:
 			error = OFP_EOPNOTSUPP;
 			break;
-
+		case OFP_SO_UDP_TX_NOCHECKSUM:
+			error = ofp_sooptcopyin(sopt, &val32, sizeof val32,
+					    sizeof val32);
+			if (error)
+				goto bad;
+			OFP_INFO("set OFP_SO_UDP_TX_NOCHECKSUM option to socket (val=%d)!", val32);
+			if (val32 > 0)
+				so->so_options |= OFP_SO_UDP_TX_NOCHECKSUM;
+			else
+				so->so_options &= ~OFP_SO_UDP_TX_NOCHECKSUM;
+			break;
 		case OFP_SO_USER_COOKIE:
 			error = ofp_sooptcopyin(sopt, &val32, sizeof val32,
 					    sizeof val32);

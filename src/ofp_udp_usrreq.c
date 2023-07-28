@@ -1151,7 +1151,8 @@ udp_output(struct inpcb *inp, odp_packet_t m, struct ofp_sockaddr *addr,
 	 * UDP checksum will be inserted (either by SW or HW) after routing.
 	 */
 #ifdef OFP_IPv4_UDP_CSUM_COMPUTE
-	if (ofp_udp_cksum)
+	if (ofp_udp_cksum &&
+		!(inp->inp_socket->so_options & OFP_SO_UDP_TX_NOCHECKSUM))
 		ofp_packet_user_area(m)->chksum_flags |=
 			OFP_UDP_CHKSUM_INSERT;
 	else
