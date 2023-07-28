@@ -795,7 +795,7 @@ ofp_icmp6_input(odp_packet_t *m, int *offp, int *nxt)
 #ifndef SP
 		if (icmp6len < (sizeof(struct ofp_nd_neighbor_solicit)  + 8) &&
 			(icmp6_data(icmp6)[20] !=
-				OFP_ND_OPT_SOURCE_LINKADDR)
+				OFP_ND_OPT_SOURCE_LINKADDR))
 			goto badlen;
 
 		ofp_nd6_na_output(ifp, ip6->ip6_src.ofp_s6_addr,
