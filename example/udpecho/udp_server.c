@@ -87,7 +87,7 @@ static int udpecho(void *arg)
 	(void)arg;
 
 	OFP_INFO("UDP server thread started");
-
+	pthread_setname_np(pthread_self(), "do-udpecho");
 	if (ofp_init_local()) {
 		OFP_ERR("Error: OFP local init failed.\n");
 		return -1;
@@ -107,7 +107,9 @@ static int udpecho(void *arg)
 	my_addr.sin_port = odp_cpu_to_be_16(2048);
 	my_addr.sin_addr.s_addr = my_ip_addr;
 	my_addr.sin_len = sizeof(my_addr);
-
+	int optval = 1;
+	ofp_setsockopt(serv_fd, OFP_SOL_SOCKET, OFP_SO_UDP_TX_NOCHECKSUM,
+		&optval, sizeof(optval));
 	if (ofp_bind(serv_fd, (struct ofp_sockaddr *)&my_addr,
 		       sizeof(struct ofp_sockaddr)) < 0) {
 		OFP_ERR("ofp_bind failed, err='%s'",
