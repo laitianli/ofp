@@ -9,12 +9,14 @@
 #include <string.h>
 #include <inttypes.h>
 #include <sys/socket.h>
-
+#include <signal.h>
 #include "ofp.h"
 
 #include "udp_server.h"
-
+int exit_threads = 0;
 #define MAX_WORKERS		32
+/** Maximum number of packet in a burst */
+#define PKT_BURST_SIZE  16
 
 /**
  * Parsed command line application arguments
@@ -24,6 +26,7 @@ typedef struct {
 	int if_count;		/**< Number of interfaces to be used */
 	char **if_names;	/**< Array of pointers to interface names */
 	char *cli_file;
+	int u_flag;
 } appl_args_t;
 
 /* helper funcs */
@@ -53,6 +56,90 @@ static enum ofp_return_code fastpath_local_hook(odp_packet_t pkt, void *arg)
 	return OFP_PKT_CONTINUE;
 }
 
+struct dpdk_thread_args {
+	int index;
+	odp_pktio_t pktio;
+	odp_pktin_queue_t pktin;
+};
+
+struct dpdk_thread_args dpdk_args[8] = {0};
+
+/**
+ * Handle timeout events
+ */
+static inline void handle_timeouts(void)
+{
+	odp_event_t ev;
+
+	ev = odp_schedule(NULL, ODP_SCHED_NO_WAIT);
+	while (ev != ODP_EVENT_INVALID) {
+		if (odp_event_type(ev) == ODP_EVENT_TIMEOUT) {
+			ofp_timer_handle(ev);
+		} else {
+			OFP_ERR("Error: unexpected event type: %u\n",
+				odp_event_type(ev));
+			odp_event_free(ev);
+		}
+		ev = odp_schedule(NULL, ODP_SCHED_NO_WAIT);
+	}
+}
+
+static inline int rx_burst(odp_pktin_queue_t pktin)
+{
+	odp_packet_t pkt_tbl[PKT_BURST_SIZE];
+	int pkts, i;
+
+	pkts = odp_pktin_recv(pktin, pkt_tbl, PKT_BURST_SIZE);
+
+	for (i = 0; i < pkts; i++) {
+		ofp_packet_input(pkt_tbl[i], ODP_QUEUE_INVALID,
+				 ofp_eth_vlan_processing);
+	}
+
+	return pkts;
+}
+
+
+static int dpdk_io_recv(void *arg)
+{
+	if (!arg) {
+		OFP_ERR("thread arg is null, exit thread!");
+		return -1;
+	}
+	struct dpdk_thread_args* th_args = (struct dpdk_thread_args*)arg;
+
+	printf("[Note][%s:%d] enter function, thread index:%d \n",
+		__func__, __LINE__, th_args->index);
+	if (ofp_init_local()) {
+		OFP_ERR("Error: OFP local init failed\n");
+		exit_threads = 1;
+		return -1;
+	}
+	char thread_name[64] = {0};
+	snprintf(thread_name, sizeof(thread_name) - 1,
+		"dpdk_io_recv%d", th_args->index);
+	pthread_setname_np(pthread_self(), thread_name);
+	int count_to = 1;
+	while (!exit_threads) {
+		if (count_to % 20000 == 0)
+			handle_timeouts();
+		count_to ++;
+
+		rx_burst(th_args->pktin);
+	}
+	return 0;
+}
+
+/**
+ * Signal handler for SIGINT
+ */
+static void sig_handler(int signo)
+{
+	if (signo == 2)
+		exit_threads = 1;
+}
+
+
 /** main() Application entry point
  *
  * @param argc int
@@ -79,7 +166,7 @@ int main(int argc, char *argv[])
 	printf("RLIMIT_CORE: %ld/%ld\n", rlp.rlim_cur, rlp.rlim_max);
 	rlp.rlim_cur = 200000000;
 	printf("Setting to max: %d\n", setrlimit(RLIMIT_CORE, &rlp));
-
+	signal(SIGINT, sig_handler);
 	/* Parse and store the application arguments */
 	parse_args(argc, argv, &params);
 
@@ -122,6 +209,8 @@ int main(int argc, char *argv[])
 	app_init_params.if_count = params.if_count;
 	app_init_params.if_names = params.if_names;
 	app_init_params.pkt_hook[OFP_HOOK_LOCAL] = fastpath_local_hook;
+	app_init_params.pktin_mode = ODP_PKTIN_MODE_DIRECT;
+	app_init_params.pktout_mode = ODP_PKTOUT_MODE_DIRECT;
 	if (ofp_init_global(instance, &app_init_params)) {
 		OFP_ERR("Error: OFP global init failed.\n");
 		exit(EXIT_FAILURE);
@@ -129,20 +218,63 @@ int main(int argc, char *argv[])
 
 	memset(thread_tbl, 0, sizeof(thread_tbl));
 	/* Start dataplane dispatcher worker threads */
+	if (params.u_flag) {
+		int i = 0;
+		odp_cpumask_t cpumask_dpdk;
+		for (i = 0; i < params.if_count; i++) {
+			OFP_INFO("begin create work thread %d, for fp%d", i+1, i);
+			dpdk_args[i].pktio = odp_pktio_lookup(params.if_names[i]);
+			if (dpdk_args[i].pktio == ODP_PKTIO_INVALID) {
+				OFP_ERR("Error: failed locate pktio %s, so exit application!",
+					params.if_names[i]);
+				exit(EXIT_FAILURE);
+			}
+			dpdk_args[i].index = i;
+			if (odp_pktin_queue(dpdk_args[i].pktio, &dpdk_args[i].pktin, 1) != 1) {
+				OFP_ERR("Error: too few pktin queues for fp%s, so exit application!",
+					params.if_names[i]);
+				exit(EXIT_FAILURE);
+			}
+			if (odp_pktout_queue(dpdk_args[i].pktio, NULL, 0) != 1) {
+				OFP_ERR("Error: too few pktout queues for %s, so exit application!",
+					params.if_names[i]);
+				exit(EXIT_FAILURE);
+			}
+			odph_thread_param_init(&thr_params);
+			thr_params.start = dpdk_io_recv;
+			thr_params.arg = &dpdk_args[i];
+			thr_params.thr_type = ODP_THREAD_WORKER;
+			odph_thread_common_param_init(&thr_common);
+			thr_common.instance = instance;
 
-	odph_thread_param_init(&thr_params);
-	thr_params.start = default_event_dispatcher;
-	thr_params.arg = ofp_eth_vlan_processing;
-	thr_params.thr_type = ODP_THREAD_WORKER;
-	odph_thread_common_param_init(&thr_common);
-	thr_common.instance = instance;
-	thr_common.cpumask = &cpumask;
-	thr_common.share_param = 1;
+			odp_cpumask_zero(&cpumask_dpdk);
+			odp_cpumask_set(&cpumask_dpdk, odp_cpumask_first(&cpumask) + i);
 
-	if (odph_thread_create(thread_tbl, &thr_common, &thr_params,
-			       num_workers) != num_workers) {
-		OFP_ERR("Error: odph_thread_create() failed.\n");
-		exit(EXIT_FAILURE);
+			thr_common.cpumask = &cpumask_dpdk;
+			thr_common.share_param = 1;
+
+			if (odph_thread_create(&thread_tbl[i], &thr_common,
+				&thr_params, 1) != 1) {
+				OFP_ERR("Error: odph_thread_create() failed.\n");
+				exit(EXIT_FAILURE);
+			}
+		}
+	}
+	else {
+		odph_thread_param_init(&thr_params);
+		thr_params.start = default_event_dispatcher;
+		thr_params.arg = ofp_eth_vlan_processing;
+		thr_params.thr_type = ODP_THREAD_WORKER;
+		odph_thread_common_param_init(&thr_common);
+		thr_common.instance = instance;
+		thr_common.cpumask = &cpumask;
+		thr_common.share_param = 1;
+
+		if (odph_thread_create(thread_tbl, &thr_common, &thr_params,
+				       num_workers) != num_workers) {
+			OFP_ERR("Error: odph_thread_create() failed.\n");
+			exit(EXIT_FAILURE);
+		}
 	}
 
 	/* other app code here.*/
@@ -184,7 +316,7 @@ static void parse_args(int argc, char *argv[], appl_args_t *appl_args)
 	memset(appl_args, 0, sizeof(*appl_args));
 
 	while (1) {
-		opt = getopt_long(argc, argv, "+c:i:hf:",
+		opt = getopt_long(argc, argv, "+c:i:hf:u",
 				  longopts, &long_index);
 
 		if (opt == -1)
@@ -258,7 +390,9 @@ static void parse_args(int argc, char *argv[], appl_args_t *appl_args)
 
 			strcpy(appl_args->cli_file, optarg);
 			break;
-
+		case 'u':
+			appl_args->u_flag = 1;
+			break;
 		default:
 			break;
 		}
